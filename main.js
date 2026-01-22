@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
@@ -50,12 +51,12 @@ app.use(express.static('public', { extensions: ['html'] })); // Serve static fil
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'))); // Explicitly serve uploads
 
 app.use(session({
-    secret: 'secret-key-atestat-proiect', // In productie, foloseste .env
+    secret: process.env.SESSION_SECRET || 'dev-secret',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false, // true daca folosim HTTPS
-        maxAge: 1000 * 60 * 60 * 24 // 1 zi
+        secure: false,
+        maxAge: 1000 * 60 * 60 * 24
     }
 }));
 
@@ -100,8 +101,7 @@ app.post('/api/register', (req, res) => {
 function registerUser(username, email, password, isAdmin, res) {
     createUser(username, email, password, isAdmin, (err, userId) => {
         if (err) {
-            console.error(err);
-            if (err.message.includes("UNIQUE constraint failed")) {
+            if (err.message && err.message.includes("UNIQUE constraint failed")) {
                 return res.status(400).json({ error: "Utilizatorul sau email-ul există deja." });
             }
             return res.status(500).json({ error: "Eroare la crearea contului." });
@@ -111,29 +111,27 @@ function registerUser(username, email, password, isAdmin, res) {
 }
 
 // --- LOGIN ---
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { identifier, password } = req.body;
 
-    db.get(
-        `SELECT * FROM users WHERE email = ? OR username = ?`,
-        [identifier, identifier],
-        async (err, user) => {
-            if (err) return res.status(500).json({ error: "Eroare server." });
-            if (!user) return res.status(401).json({ error: "Utilizator/Email sau parolă incorectă." });
+    try {
+        const user = db.prepare(`SELECT * FROM users WHERE email = ? OR username = ?`).get(identifier, identifier);
 
-            const match = await bcrypt.compare(password, user.password_hash);
-            if (match) {
-                // Setare sesiune
-                req.session.userId = user.id;
-                req.session.username = user.username;
-                req.session.isAdmin = !!user.is_admin;
+        if (!user) return res.status(401).json({ error: "Utilizator/Email sau parolă incorectă." });
 
-                res.json({ success: true, redirect: '/dashboard' });
-            } else {
-                res.status(401).json({ error: "Email sau parolă incorectă." });
-            }
+        const match = await bcrypt.compare(password, user.password_hash);
+        if (match) {
+            req.session.userId = user.id;
+            req.session.username = user.username;
+            req.session.isAdmin = !!user.is_admin;
+            res.json({ success: true, redirect: '/dashboard' });
+        } else {
+            res.status(401).json({ error: "Email sau parolă incorectă." });
         }
-    );
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Eroare server." });
+    }
 });
 
 // --- LOGOUT ---
@@ -146,35 +144,33 @@ app.post('/api/logout', (req, res) => {
 app.get('/api/me', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: "Neautorizat" });
 
-    // Also fetch avatar_url
-    db.get("SELECT username, is_admin, avatar_url FROM users WHERE id = ?", [req.session.userId], (err, row) => {
-        if (err || !row) return res.status(500).json({ error: "Eroare DB" });
+    try {
+        const row = db.prepare("SELECT username, is_admin, avatar_url FROM users WHERE id = ?").get(req.session.userId);
+        if (!row) return res.status(404).json({ error: "Utilizator negăsit" });
         res.json(row);
-    });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare DB" });
+    }
 });
 
 // --- UPLOAD AVATAR ---
 app.post('/api/upload-avatar', requireLogin, (req, res) => {
     upload(req, res, (err) => {
-        if (err) {
-            return res.status(400).json({ error: err });
-        } else {
-            if (req.file == undefined) {
-                return res.status(400).json({ error: 'Niciun fișier selectat!' });
-            } else {
-                // File uploaded successfully, update DB
-                const avatarUrl = `/uploads/avatars/${req.file.filename}`;
-                const userId = req.session.userId;
+        if (err) return res.status(400).json({ error: err });
+        if (req.file == undefined) return res.status(400).json({ error: 'Niciun fișier selectat!' });
 
-                db.run(`UPDATE users SET avatar_url = ? WHERE id = ?`, [avatarUrl, userId], (err) => {
-                    if (err) return res.status(500).json({ error: 'Eroare salvare DB' });
-                    res.json({
-                        success: true,
-                        message: 'Avatar actualizat!',
-                        filePath: avatarUrl
-                    });
-                });
-            }
+        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+        const userId = req.session.userId;
+
+        try {
+            db.prepare(`UPDATE users SET avatar_url = ? WHERE id = ?`).run(avatarUrl, userId);
+            res.json({
+                success: true,
+                message: 'Avatar actualizat!',
+                filePath: avatarUrl
+            });
+        } catch (dbErr) {
+            res.status(500).json({ error: 'Eroare salvare DB' });
         }
     });
 });
@@ -186,45 +182,36 @@ app.post('/api/upload-avatar', requireLogin, (req, res) => {
 // --- GET BUDGET Overview ---
 app.get('/api/budget', requireLogin, (req, res) => {
     const userId = req.session.userId;
-    const currentMonth = new Date().toISOString().slice(0, 7); // Format: YYYY-MM
-    const today = new Date().toISOString().slice(0, 10); // Format: YYYY-MM-DD
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const today = new Date().toISOString().slice(0, 10);
 
-    // 1. Get Monthly Budget
-    db.get(`SELECT amount FROM budgets WHERE user_id = ? AND month = ?`, [userId, currentMonth], (err, budgetRow) => {
-        if (err) return res.status(500).json({ error: "Eroare DB" });
-
+    try {
+        const budgetRow = db.prepare(`SELECT amount FROM budgets WHERE user_id = ? AND month = ?`).get(userId, currentMonth);
         const budgetTotal = budgetRow ? budgetRow.amount : 0;
 
-        // 2. Get Total Expenses for this month
-        db.get(`SELECT SUM(amount) as total FROM expenses WHERE user_id = ? AND date LIKE ?`, [userId, `${currentMonth}%`], (err, expenseRow) => {
-            if (err) return res.status(500).json({ error: "Eroare DB" });
+        const expenseRow = db.prepare(`SELECT SUM(amount) as total FROM expenses WHERE user_id = ? AND date LIKE ?`).get(userId, `${currentMonth}%`);
+        const expensesTotal = expenseRow.total || 0;
+        const remaining = budgetTotal - expensesTotal;
 
-            const expensesTotal = expenseRow.total || 0;
-            const remaining = budgetTotal - expensesTotal;
+        const todayRow = db.prepare(`SELECT SUM(amount) as total FROM expenses WHERE user_id = ? AND date = ?`).get(userId, today);
+        const expensesToday = todayRow.total || 0;
 
-            // 3. Get Today's Expenses
-            db.get(`SELECT SUM(amount) as total FROM expenses WHERE user_id = ? AND date = ?`, [userId, today], (err, todayRow) => {
-                if (err) return res.status(500).json({ error: "Eroare DB" });
+        const now = new Date();
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        const daysLeft = daysInMonth - now.getDate() + 1;
+        const dailyBudget = daysLeft > 0 ? (remaining / daysLeft) : 0;
 
-                const expensesToday = todayRow.total || 0;
-
-                // 4. Calculate Daily Budget (Money Left / Days Left)
-                const now = new Date();
-                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-                const daysLeft = daysInMonth - now.getDate() + 1; // Include today
-                const dailyBudget = daysLeft > 0 ? (remaining / daysLeft) : 0;
-
-                res.json({
-                    totalBudget: budgetTotal,
-                    totalExpenses: expensesTotal,
-                    remaining: remaining,
-                    expensesToday: expensesToday,
-                    dailyBudget: dailyBudget.toFixed(2),
-                    daysLeft: daysLeft
-                });
-            });
+        res.json({
+            totalBudget: budgetTotal,
+            totalExpenses: expensesTotal,
+            remaining: remaining,
+            expensesToday: expensesToday,
+            dailyBudget: dailyBudget.toFixed(2),
+            daysLeft: daysLeft
         });
-    });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare DB" });
+    }
 });
 
 // --- SET BUDGET ---
@@ -233,22 +220,17 @@ app.post('/api/budget', requireLogin, (req, res) => {
     const userId = req.session.userId;
     const currentMonth = new Date().toISOString().slice(0, 7);
 
-    // Check if exists
-    db.get(`SELECT id FROM budgets WHERE user_id = ? AND month = ?`, [userId, currentMonth], (err, row) => {
+    try {
+        const row = db.prepare(`SELECT id FROM budgets WHERE user_id = ? AND month = ?`).get(userId, currentMonth);
         if (row) {
-            // Update
-            db.run(`UPDATE budgets SET amount = ? WHERE id = ?`, [amount, row.id], (err) => {
-                if (err) return res.status(500).json({ error: "Eroare update" });
-                res.json({ success: true });
-            });
+            db.prepare(`UPDATE budgets SET amount = ? WHERE id = ?`).run(amount, row.id);
         } else {
-            // Insert
-            db.run(`INSERT INTO budgets (user_id, month, amount) VALUES (?, ?, ?)`, [userId, currentMonth, amount], (err) => {
-                if (err) return res.status(500).json({ error: "Eroare insert" });
-                res.json({ success: true });
-            });
+            db.prepare(`INSERT INTO budgets (user_id, month, amount) VALUES (?, ?, ?)`).run(userId, currentMonth, amount);
         }
-    });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare salvare buget" });
+    }
 });
 
 // --- ADD EXPENSE ---
@@ -257,32 +239,35 @@ app.post('/api/expenses', requireLogin, (req, res) => {
     const userId = req.session.userId;
     const expenseDate = date || new Date().toISOString().slice(0, 10);
 
-    db.run(`INSERT INTO expenses (user_id, amount, description, date) VALUES (?, ?, ?, ?)`,
-        [userId, amount, description, expenseDate],
-        (err) => {
-            if (err) return res.status(500).json({ error: "Eroare adaugare cheltuiala" });
-            res.json({ success: true });
-        }
-    );
+    try {
+        db.prepare(`INSERT INTO expenses (user_id, amount, description, date) VALUES (?, ?, ?, ?)`).run(userId, amount, description, expenseDate);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare adăugare cheltuială" });
+    }
 });
 
 // --- GET RECENT EXPENSES ---
 app.get('/api/expenses', requireLogin, (req, res) => {
     const userId = req.session.userId;
-    db.all(`SELECT * FROM expenses WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT 5`, [userId], (err, rows) => {
-        if (err) return res.status(500).json({ error: "Eroare DB" });
+    try {
+        const rows = db.prepare(`SELECT * FROM expenses WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT 5`).all(userId);
         res.json(rows);
-    });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare DB" });
+    }
 });
 
 // --- GET ALL EXPENSES FOR CURRENT MONTH (For Chart) ---
 app.get('/api/expenses/month', requireLogin, (req, res) => {
     const userId = req.session.userId;
     const currentMonth = new Date().toISOString().slice(0, 7);
-    db.all(`SELECT * FROM expenses WHERE user_id = ? AND date LIKE ? ORDER BY date DESC, id DESC`, [userId, `${currentMonth}%`], (err, rows) => {
-        if (err) return res.status(500).json({ error: "Eroare DB" });
+    try {
+        const rows = db.prepare(`SELECT * FROM expenses WHERE user_id = ? AND date LIKE ? ORDER BY date DESC, id DESC`).all(userId, `${currentMonth}%`);
         res.json(rows);
-    });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare DB" });
+    }
 });
 
 // ==========================================
@@ -292,10 +277,12 @@ app.get('/api/expenses/month', requireLogin, (req, res) => {
 // --- GET ACTIVITIES ---
 app.get('/api/activities', requireLogin, (req, res) => {
     const userId = req.session.userId;
-    db.all(`SELECT * FROM activities WHERE user_id = ? ORDER BY start_data ASC`, [userId], (err, rows) => {
-        if (err) return res.status(500).json({ error: "Eroare DB" });
+    try {
+        const rows = db.prepare(`SELECT * FROM activities WHERE user_id = ? ORDER BY start_data ASC`).all(userId);
         res.json(rows);
-    });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare DB" });
+    }
 });
 
 // --- ADD ACTIVITY ---
@@ -303,13 +290,12 @@ app.post('/api/activities', requireLogin, (req, res) => {
     const { title, type, start_data, duration } = req.body;
     const userId = req.session.userId;
 
-    db.run(`INSERT INTO activities (user_id, title, type, start_data, duration) VALUES (?, ?, ?, ?, ?)`,
-        [userId, title, type, start_data, duration],
-        (err) => {
-            if (err) return res.status(500).json({ error: "Eroare adaugare activitate" });
-            res.json({ success: true });
-        }
-    );
+    try {
+        db.prepare(`INSERT INTO activities (user_id, title, type, start_data, duration) VALUES (?, ?, ?, ?, ?)`).run(userId, title, type, start_data, duration);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare adăugare activitate" });
+    }
 });
 
 // --- DELETE ACTIVITY ---
@@ -317,10 +303,12 @@ app.delete('/api/activities/:id', requireLogin, (req, res) => {
     const activityId = req.params.id;
     const userId = req.session.userId;
 
-    db.run(`DELETE FROM activities WHERE id = ? AND user_id = ?`, [activityId, userId], (err) => {
-        if (err) return res.status(500).json({ error: "Eroare stergere activitate" });
+    try {
+        db.prepare(`DELETE FROM activities WHERE id = ? AND user_id = ?`).run(activityId, userId);
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare ștergere activitate" });
+    }
 });
 
 // --- SUGGEST SLOT (Simple Algorithm) ---
@@ -359,9 +347,8 @@ app.post('/api/suggest-slot', requireLogin, (req, res) => {
 // --- GET NEXT ACTIVITIES (For Dashboard) ---
 app.get('/api/next-activity', requireLogin, (req, res) => {
     const userId = req.session.userId;
-    db.all(`SELECT * FROM activities WHERE user_id = ?`, [userId], (err, rows) => {
-        if (err) return res.status(500).json({ error: "Eroare DB" });
-
+    try {
+        const rows = db.prepare(`SELECT * FROM activities WHERE user_id = ?`).all(userId);
         const now = new Date();
         const upcoming = [];
 
@@ -370,7 +357,6 @@ app.get('/api/next-activity', requireLogin, (req, res) => {
             if (act.type === 'fixed') {
                 actDate = new Date(act.start_data);
             } else {
-                // Parse "Monday 14:00"
                 const parts = act.start_data.split(' ');
                 if (parts.length === 2) {
                     const days = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
@@ -380,11 +366,10 @@ app.get('/api/next-activity', requireLogin, (req, res) => {
                     actDate = new Date(now);
                     actDate.setHours(hour, minute, 0, 0);
 
-                    // Adjust day
                     const currentDay = now.getDay();
                     let diff = targetDay - currentDay;
                     if (diff < 0 || (diff === 0 && actDate <= now)) {
-                        diff += 7; // Next week
+                        diff += 7;
                     }
                     if (diff !== 0) actDate.setDate(now.getDate() + diff);
                 }
@@ -403,10 +388,11 @@ app.get('/api/next-activity', requireLogin, (req, res) => {
             }
         });
 
-        // Sort by time and take top 3
         upcoming.sort((a, b) => a.timestamp - b.timestamp);
         res.json({ activities: upcoming.slice(0, 3) });
-    });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare DB" });
+    }
 });
 
 // ==========================================
