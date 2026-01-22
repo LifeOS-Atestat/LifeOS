@@ -322,9 +322,23 @@ button,
     text-align: center;
     font-weight: 700;
     margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+.day-column.today {
+    background: rgba(99, 102, 241, 0.08); /* Subtle highlight */
+    border: 1px solid var(--primary);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);
+}
+
+.day-column.today .day-header {
+    background: var(--primary);
+    color: white;
+    border-radius: 0.5rem 0.5rem 0 0;
+    margin: -1rem -1rem 1rem -1rem;
+    padding: 0.5rem;
+}
+
 
 .event-card {
     background: rgba(99, 102, 241, 0.2);

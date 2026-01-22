@@ -324,6 +324,13 @@ function saveExpense() {
 
 /* --- SCHEDULE PAGE --- */
 function initSchedule() {
+    // Highlight today
+    const today = new Date().getDay();
+    const todayCol = document.getElementById(`col-${today}`);
+    if (todayCol) {
+        todayCol.parentElement.classList.add('today');
+    }
+
     // Initialize Flatpickr if available
     if (window.flatpickr) {
         flatpickr("#actDate", { enableTime: true, dateFormat: "Y-m-d H:i", time_24hr: true, locale: "ro", minDate: "today", disableMobile: "true", theme: "dark" });
@@ -335,19 +342,42 @@ function initSchedule() {
 }
 
 function renderActivity(act) {
-    let colId, timeDisplay;
+    let colId, timeDisplay, dateInfo = '';
+    const now = new Date();
+    let actDate = null;
+
     if (act.type === 'fixed') {
-        const date = new Date(act.start_data);
-        colId = `col-${date.getDay()}`;
-        timeDisplay = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        actDate = new Date(act.start_data);
+        colId = `col-${actDate.getDay()}`;
+        timeDisplay = actDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        dateInfo = actDate.toLocaleDateString('ro-RO', { day: 'numeric', month: 'short' });
     } else {
         const parts = act.start_data.split(' ');
         if (parts.length === 2) {
             const days = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
-            colId = `col-${days[parts[0]]}`;
+            const targetDay = days[parts[0]];
+            colId = `col-${targetDay}`;
             timeDisplay = parts[1];
+            dateInfo = "Săptămânal";
+
+            // Calculate next occurrence for "days until"
+            const [hour, minute] = parts[1].split(':').map(Number);
+            actDate = new Date(now);
+            actDate.setHours(hour, minute, 0, 0);
+            let diff = targetDay - now.getDay();
+            if (diff < 0 || (diff === 0 && actDate <= now)) diff += 7;
+            actDate.setDate(now.getDate() + diff);
         } else return;
     }
+
+    // Calculate "days until"
+    let daysUntilStr = '';
+    if (actDate) {
+        const diffTime = actDate.setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0);
+        const daysDiff = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        daysUntilStr = daysDiff === 0 ? 'Azi' : (daysDiff === 1 ? 'Mâine' : `În ${daysDiff} zile`);
+    }
+
     const container = document.getElementById(colId);
     if (container) {
         const card = document.createElement('div');
@@ -355,8 +385,9 @@ function renderActivity(act) {
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
-                    <div class="event-time">${timeDisplay}</div>
-                    <div style="word-break: break-all;">${act.title}</div>
+                    <div class="event-time">${timeDisplay} <span style="opacity: 0.6; font-weight: 400; margin-left: 4px;">• ${dateInfo}</span></div>
+                    <div style="font-weight: 600; margin: 2px 0;">${act.title}</div>
+                    <div style="font-size: 0.7rem; color: var(--primary); font-weight: 500;">${daysUntilStr}</div>
                 </div>
                 <button onclick="requestDelete(this, ${act.id})" class="btn-delete-act" title="Șterge">×</button>
             </div>
