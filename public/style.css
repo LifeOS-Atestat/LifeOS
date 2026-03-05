@@ -190,6 +190,12 @@ button,
     display: inline-block;
 }
 
+.btn-primary:active,
+.btn-secondary:active,
+.btn-success:active {
+    transform: scale(0.98);
+}
+
 .btn-primary {
     background: var(--primary);
     color: white;
@@ -197,6 +203,18 @@ button,
 
 .btn-primary:hover {
     background: var(--primary-dark);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
 }
 
 .btn-secondary {
@@ -326,7 +344,8 @@ button,
 }
 
 .day-column.today {
-    background: rgba(99, 102, 241, 0.08); /* Subtle highlight */
+    background: rgba(99, 102, 241, 0.08);
+    /* Subtle highlight */
     border: 1px solid var(--primary);
     box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);
 }
@@ -347,13 +366,67 @@ button,
     border-radius: 0.25rem;
     margin-bottom: 0.5rem;
     font-size: 0.85rem;
+    transition: all 0.3s ease;
 }
 
-.event-time {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    margin-bottom: 0.25rem;
+.event-card.is-finished {
+    background: rgba(16, 185, 129, 0.15) !important;
+    border-left-color: var(--success) !important;
+    opacity: 0.7;
 }
+
+.event-card.is-finished div,
+.event-card.is-finished span {
+    color: #94a3b8 !important;
+}
+
+
+.btn-delete-act {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 4px;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 1.1rem;
+    line-height: 0;
+    padding-top: 11px;
+    /* Pushed down for optical centering */
+}
+
+.btn-delete-act:hover {
+    background: #ef4444;
+    color: #ffffff !important;
+    transform: scale(1.1);
+}
+
+.btn-finish-act {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 4px;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 1rem;
+    line-height: 0;
+}
+
+.btn-finish-act:hover {
+    background: #10b981;
+    color: #ffffff !important;
+    transform: scale(1.1);
+}
+
 
 /* Modals */
 .modal {
@@ -402,21 +475,7 @@ a:hover {
     font-size: 0.9rem;
 }
 
-/* Delete Activity Button */
-.btn-delete-act {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 1.25rem;
-    line-height: 1;
-    padding: 0 0 0 0.5rem;
-    cursor: pointer;
-    transition: color 0.2s;
-}
 
-.btn-delete-act:hover {
-    color: #ef4444;
-}
 
 /* Delete Confirmation Overlay */
 .event-card {
@@ -530,4 +589,125 @@ a:hover {
 
 .btn-signup:hover {
     background: rgba(255, 255, 255, 0.2);
+}
+
+/* --- Global Clock --- */
+.app-clock {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 999;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+}
+
+/* --- Toast Notifications --- */
+.toast-container {
+    position: fixed;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    pointer-events: none;
+}
+
+.toast {
+    background: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 0.85rem 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: toast-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    pointer-events: auto;
+    border-left: 4px solid var(--primary);
+}
+
+.toast.success {
+    border-left-color: #10b981;
+}
+
+.toast.error {
+    border-left-color: #ef4444;
+}
+
+.toast.warning {
+    border-left-color: #f59e0b;
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toast-out {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+}
+
+.toast.fade-out {
+    animation: toast-out 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.app-clock::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--success);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
 }

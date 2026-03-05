@@ -76,6 +76,8 @@
                 <h3>Setări Rapide</h3>
                 <button onclick="openModal('budgetModal')" style="width: 100%; margin-top: 1rem;"
                     class="btn-secondary">✏️ Setează Buget Lunar</button>
+                <button onclick="openModal('addBudgetModal')" style="width: 100%; margin-top: 0.75rem;"
+                    class="btn-success">💰 Adaugă Fonduri</button>
                 <button onclick="openModal('expenseModal')" style="width: 100%; margin-top: 0.75rem;"
                     class="btn-primary">➕ Adaugă Cheltuială</button>
             </div>
@@ -92,10 +94,24 @@
     <div id="budgetModal" class="modal">
         <div class="card">
             <h3>Setează Bugetul Lunar</h3>
-            <input type="number" id="newBudgetAmount" placeholder="Suma (RON)" style="margin: 1rem 0;">
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">Aceasta va suprascrie bugetul curent.</p>
+            <input type="number" id="newBudgetAmount" placeholder="Suma (RON)" style="margin-bottom: 1rem;">
             <div style="display: flex; gap: 0.5rem;">
                 <button onclick="saveBudget()" class="btn-primary" style="flex: 1;">Salvează</button>
                 <button onclick="closeModal('budgetModal')" class="btn-secondary" style="flex: 1;">Anulează</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adaugă Fonduri -->
+    <div id="addBudgetModal" class="modal">
+        <div class="card">
+            <h3>Adaugă Fonduri</h3>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">Adaugă bani la bugetul lunar existent.</p>
+            <input type="number" id="topupAmount" placeholder="Suma de adăugat (RON)" style="margin-bottom: 1rem;">
+            <div style="display: flex; gap: 0.5rem;">
+                <button onclick="saveAddedBudget()" class="btn-success" style="flex: 1;">Adaugă</button>
+                <button onclick="closeModal('addBudgetModal')" class="btn-secondary" style="flex: 1;">Anulează</button>
             </div>
         </div>
     </div>

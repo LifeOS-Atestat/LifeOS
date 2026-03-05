@@ -1,10 +1,60 @@
 /* --- GLOBAL CONFIG --- */
+function initClock() {
+    let clockEl = document.getElementById('globalClock');
+    if (!clockEl) {
+        clockEl = document.createElement('div');
+        clockEl.id = 'globalClock';
+        clockEl.className = 'app-clock';
+        document.body.appendChild(clockEl);
+    }
+    const update = () => {
+        const now = new Date();
+        clockEl.innerText = now.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    };
+    update();
+    setInterval(update, 1000);
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initClock);
+} else {
+    initClock();
+}
+
+/* --- TOAST NOTIFICATIONS --- */
+function showToast(message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    let icon = 'ℹ️';
+    if (type === 'success') icon = '✅';
+    if (type === 'error') icon = '❌';
+    if (type === 'warning') icon = '⚠️';
+
+    toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+    container.appendChild(toast);
+
+    // Auto remove
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
 const API = {
     me: '/api/me',
     login: '/api/login',
     logout: '/api/logout',
     register: '/api/register',
     budget: '/api/budget',
+    budgetAdd: '/api/budget/add',
     expenses: '/api/expenses',
     activities: '/api/activities',
     nextActivity: '/api/next-activity',
@@ -142,7 +192,7 @@ function initRegister() {
                 method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' }
             });
             const result = await res.json();
-            if (result.success) { alert('Cont creat!'); window.location.href = '/login'; }
+            if (result.success) { showToast('Cont creat!', 'success'); window.location.href = '/login'; }
             else showAuthError(result.error);
         } catch (err) { console.error(err); }
     });
@@ -311,8 +361,16 @@ function loadFinancialData() {
 
 function saveBudget() {
     const amount = document.getElementById('newBudgetAmount').value;
+    if (!amount) return showToast('Introdu suma!', 'warning');
     fetch(API.budget, { method: 'POST', body: JSON.stringify({ amount }), headers: { 'Content-Type': 'application/json' } })
-        .then(() => { closeModal('budgetModal'); loadFinancialData(); alert('Buget actualizat!'); });
+        .then(() => { closeModal('budgetModal'); loadFinancialData(); showToast('Buget setat!', 'success'); });
+}
+
+function saveAddedBudget() {
+    const amount = document.getElementById('topupAmount').value;
+    if (!amount) return showToast('Introdu suma!', 'warning');
+    fetch(API.budgetAdd, { method: 'PATCH', body: JSON.stringify({ amount }), headers: { 'Content-Type': 'application/json' } })
+        .then(() => { closeModal('addBudgetModal'); loadFinancialData(); showToast('Fonduri adăugate!', 'success'); });
 }
 
 function saveExpense() {
@@ -370,26 +428,56 @@ function renderActivity(act) {
         } else return;
     }
 
-    // Calculate "days until"
+    // Calculate "days until" and "time remaining"
     let daysUntilStr = '';
-    if (actDate) {
-        const diffTime = actDate.setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0);
-        const daysDiff = Math.round(diffTime / (1000 * 60 * 60 * 24));
-        daysUntilStr = daysDiff === 0 ? 'Azi' : (daysDiff === 1 ? 'Mâine' : `În ${daysDiff} zile`);
+    if (act.is_finished && act.finished_at) {
+        const finishedDate = new Date(act.finished_at);
+        const elapsedMin = Math.floor((now - finishedDate) / (1000 * 60));
+        daysUntilStr = `Terminat acum ${elapsedMin} min`;
+    } else if (actDate) {
+        const diffMsToday = actDate - now;
+        const diffDays = Math.round((actDate.setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) {
+            if (diffMsToday > 0) {
+                const totalMin = Math.floor(diffMsToday / (1000 * 60));
+                const h = Math.floor(totalMin / 60);
+                const m = totalMin % 60;
+                daysUntilStr = `Azi (peste ${h > 0 ? h + 'h ' : ''}${m}min)`;
+            } else {
+                // Check if it's currently happening
+                const durationMs = (act.duration || 0) * 60 * 1000;
+                if (diffMsToday + durationMs > 0) {
+                    daysUntilStr = "Azi (În desfășurare 🟢)";
+                } else {
+                    daysUntilStr = "Azi (S-a încheiat)";
+                }
+            }
+        } else if (diffDays === 1) {
+            daysUntilStr = 'Mâine';
+        } else if (diffDays > 1) {
+            daysUntilStr = `În ${diffDays} zile`;
+        } else {
+            daysUntilStr = 'A trecut';
+        }
     }
 
     const container = document.getElementById(colId);
     if (container) {
         const card = document.createElement('div');
-        card.className = 'event-card';
+        card.className = `event-card ${act.is_finished ? 'is-finished' : ''}`;
+        card.id = `act-${act.id}`;
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
                     <div class="event-time">${timeDisplay} <span style="opacity: 0.6; font-weight: 400; margin-left: 4px;">• ${dateInfo}</span></div>
                     <div style="font-weight: 600; margin: 2px 0;">${act.title}</div>
-                    <div style="font-size: 0.7rem; color: var(--primary); font-weight: 500;">${daysUntilStr}</div>
+                    <div class="event-status" style="font-size: 0.7rem; color: var(--primary); font-weight: 500;">${daysUntilStr}</div>
                 </div>
-                <button onclick="requestDelete(this, ${act.id})" class="btn-delete-act" title="Șterge">×</button>
+                <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                    <button onclick="requestDelete(this, ${act.id})" class="btn-delete-act" title="Șterge">×</button>
+                    ${!act.is_finished ? `<button onclick="finishActivity(this, ${act.id})" class="btn-finish-act" title="Marchează ca terminat">✓</button>` : ''}
+                </div>
             </div>
         `;
         container.appendChild(card);
@@ -422,8 +510,36 @@ function confirmDelete(id) {
     fetch(`${API.activities}/${id}`, { method: 'DELETE' })
         .then(res => res.json())
         .then(data => {
-            if (data.success) location.reload();
-            else alert('Eroare la ștergere!');
+            if (data.success) {
+                location.reload();
+            }
+            else showToast('Eroare la ștergere!', 'error');
+        });
+}
+
+function finishActivity(btn, id) {
+    const card = btn.closest('.event-card');
+    if (!card) return;
+
+    // Call completion API
+    fetch(`${API.activities}/${id}/finish`, { method: 'PATCH' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Apply "is-finished" state visually
+                card.classList.add('is-finished');
+                // Update status text instantly
+                const statusEl = card.querySelector('.event-status');
+                if (statusEl) statusEl.innerText = "Terminat acum 0 min";
+
+                // Remove the finish button
+                const finishBtn = card.querySelector('.btn-finish-act');
+                if (finishBtn) finishBtn.remove();
+
+                // Add a small temporary glow for feedback
+                card.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.5)';
+                setTimeout(() => card.style.boxShadow = '', 2000);
+            }
         });
 }
 
@@ -451,23 +567,23 @@ function saveActivity() {
     let start = '';
     if (type === 'fixed') {
         start = document.getElementById('actDate').value;
-        if (!start) return alert("Selectează data și ora!");
+        if (!start) return showToast("Selectează data și ora!", "warning");
     } else {
         const dayIndex = document.getElementById('recurDay').value;
         const time = document.getElementById('recurTime').value;
-        if (!time) return alert("Selectează ora!");
+        if (!time) return showToast("Selectează ora!", "warning");
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         start = `${days[dayIndex]} ${time}`;
     }
     fetch(API.activities, { method: 'POST', body: JSON.stringify({ title, type, start_data: start, duration: 60 }), headers: { 'Content-Type': 'application/json' } })
-        .then(() => { closeModal('actModal'); location.reload(); });
+        .then(() => { closeModal('actModal'); showToast("Activitate salvată!", "success"); setTimeout(() => location.reload(), 1000); });
 }
 
 function getSuggestion() {
     fetch(API.suggest, { method: 'POST', body: JSON.stringify({ duration: 60 }), headers: { 'Content-Type': 'application/json' } })
         .then(res => res.json())
         .then(suggestions => {
-            if (suggestions.length > 0) alert(`Sugestie: ${suggestions[0].label}`);
+            if (suggestions.length > 0) showToast(`Sugestie: ${suggestions[0].label}`, "info");
         });
 }
 

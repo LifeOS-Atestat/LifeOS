@@ -233,6 +233,27 @@ app.post('/api/budget', requireLogin, (req, res) => {
     }
 });
 
+// --- ADD TO BUDGET (Top-up) ---
+app.patch('/api/budget/add', requireLogin, (req, res) => {
+    const { amount } = req.body;
+    const userId = req.session.userId;
+    const currentMonth = new Date().toISOString().slice(0, 7);
+
+    try {
+        const row = db.prepare(`SELECT id, amount FROM budgets WHERE user_id = ? AND month = ?`).get(userId, currentMonth);
+        if (row) {
+            const newAmount = row.amount + parseFloat(amount);
+            db.prepare(`UPDATE budgets SET amount = ? WHERE id = ?`).run(newAmount, row.id);
+        } else {
+            // If no budget set yet, treat "add" as "set"
+            db.prepare(`INSERT INTO budgets (user_id, month, amount) VALUES (?, ?, ?)`).run(userId, currentMonth, amount);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare adăugare fonduri" });
+    }
+});
+
 // --- ADD EXPENSE ---
 app.post('/api/expenses', requireLogin, (req, res) => {
     const { amount, description, date } = req.body;
@@ -311,6 +332,21 @@ app.delete('/api/activities/:id', requireLogin, (req, res) => {
     }
 });
 
+// --- FINISH ACTIVITY (Delayed deletion) ---
+app.patch('/api/activities/:id/finish', requireLogin, (req, res) => {
+    const activityId = req.params.id;
+    const userId = req.session.userId;
+    const now = new Date().toISOString();
+
+    try {
+        db.prepare(`UPDATE activities SET is_finished = 1, finished_at = ? WHERE id = ? AND user_id = ?`)
+            .run(now, activityId, userId);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare finalizare activitate" });
+    }
+});
+
 // --- SUGGEST SLOT (Simple Algorithm) ---
 app.post('/api/suggest-slot', requireLogin, (req, res) => {
     const { duration } = req.body; // in minutes
@@ -378,12 +414,25 @@ app.get('/api/next-activity', requireLogin, (req, res) => {
             if (actDate && actDate > now) {
                 const diffTime = actDate - now;
                 const daysDiff = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                let daysUntilStr = '';
+                if (daysDiff === 0) {
+                    const totalMin = Math.floor(diffTime / (1000 * 60));
+                    const h = Math.floor(totalMin / 60);
+                    const m = totalMin % 60;
+                    daysUntilStr = `Azi (peste ${h > 0 ? h + 'h ' : ''}${m}min)`;
+                } else if (daysDiff === 1) {
+                    daysUntilStr = 'Mâine';
+                } else {
+                    daysUntilStr = `În ${daysDiff} zile`;
+                }
+
                 upcoming.push({
                     title: act.title,
                     timestamp: actDate.getTime(),
                     time: actDate.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' }),
                     dateStr: actDate.toLocaleDateString('ro-RO', { weekday: 'short', day: 'numeric' }),
-                    days_until: daysDiff === 0 ? 'Azi' : (daysDiff === 1 ? 'Mâine' : `În ${daysDiff} zile`)
+                    days_until: daysUntilStr
                 });
             }
         });
@@ -394,6 +443,22 @@ app.get('/api/next-activity', requireLogin, (req, res) => {
         res.status(500).json({ error: "Eroare DB" });
     }
 });
+
+// ==========================================
+// Periodic Tasks
+// ==========================================
+// Șterge activitățile finalizate de peste 1 oră
+setInterval(() => {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    try {
+        const info = db.prepare(`DELETE FROM activities WHERE is_finished = 1 AND finished_at < ?`).run(oneHourAgo);
+        if (info.changes > 0) {
+            console.log(`Cleanup: Am șters ${info.changes} activități finalizate de peste o oră.`);
+        }
+    } catch (err) {
+        console.error("Eroare cleanup activități:", err);
+    }
+}, 60000); // Rulează la fiecare minut
 
 // ==========================================
 // Server Start
