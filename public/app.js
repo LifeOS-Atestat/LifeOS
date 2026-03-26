@@ -115,30 +115,70 @@ function renderSidebar() {
         { href: '/settings', icon: '⚙️', text: 'Setări' }
     ];
 
+    const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+    if (isCollapsed) {
+        sidebar.classList.add('collapsed');
+        document.querySelector('.main')?.classList.add('wide'); // Optional: push main more? Let's stay with CSS margin for now.
+    }
+
     let html = `
         <div class="logo">
-            <img src="/favicon.png" alt="LifeOS Logo" style="width: 28px; height: 28px; border-radius: 6px;">
-            LifeOS
+            <img src="/favicon.png" alt="LifeOS Logo" style="width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;">
+            <span class="logo-text">LifeOS</span>
+            <button class="sidebar-toggle" onclick="toggleSidebar()" style="margin-left: auto; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.2rem; transition: 0.2s;">
+                ${isCollapsed ? '➡' : '⬅'}
+            </button>
         </div>
     `;
 
     menuItems.forEach(item => {
         const isActive = path === item.href ? 'active' : '';
-        html += `<a href="${item.href}" class="nav-item ${isActive}">${item.icon} ${item.text}</a>`;
+        html += `
+            <a href="${item.href}" class="nav-item ${isActive}" title="${item.text}">
+                <span class="icon">${item.icon}</span>
+                <span class="nav-text" style="transition: opacity 0.2s;">${item.text}</span>
+            </a>
+        `;
     });
+
+    const userName = window.currentUser ? window.currentUser.username : 'Loading...';
+    const userInitial = window.currentUser ? window.currentUser.username.charAt(0).toUpperCase() : 'U';
+    const avatarHtml = (window.currentUser && window.currentUser.avatar_url) 
+        ? `<img src="${window.currentUser.avatar_url}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`
+        : userInitial;
 
     html += `
         <div class="user-profile">
-            <div class="avatar" id="userInitial">U</div>
-            <div>
-                <div style="font-size: 0.9rem; font-weight: 500;" id="userName">Loading...</div>
+            <div class="avatar" id="userInitial" style="flex-shrink: 0; ${(window.currentUser && window.currentUser.avatar_url) ? 'background: transparent;' : ''}">
+                ${avatarHtml}
+            </div>
+            <div class="user-info" style="overflow: hidden;">
+                <div style="font-size: 0.9rem; font-weight: 500; white-space: nowrap;" id="userName">${userName}</div>
                 <button onclick="logout()" 
-                    style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem; padding: 0;">Deconectare</button>
+                    style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem; padding: 0; white-space: nowrap;">Deconectare</button>
             </div>
         </div>
     `;
 
     sidebar.innerHTML = html;
+}
+
+function toggleSidebar() {
+    const sidebar = document.querySelector('nav.sidebar');
+    if (!sidebar) return;
+    
+    const isNowCollapsed = !sidebar.classList.contains('collapsed');
+    
+    if (isNowCollapsed) {
+        sidebar.classList.add('collapsed');
+        localStorage.setItem('sidebar-collapsed', 'true');
+    } else {
+        sidebar.classList.remove('collapsed');
+        localStorage.setItem('sidebar-collapsed', 'false');
+    }
+    
+    // Re-render to update toggle icon
+    renderSidebar();
 }
 
 /* --- AUTHENTICATION --- */
@@ -147,6 +187,7 @@ function checkAuth() {
         if (res.status === 401 || res.status === 403) window.location.href = '/login';
         return res.json();
     }).then(data => {
+        window.currentUser = data; // Cache for sidebar re-renders
         // Update all user info instances
         const initialEls = document.querySelectorAll('#userInitial');
         const nameEls = document.querySelectorAll('#userName');

@@ -6,6 +6,7 @@
     --text: #f8fafc;
     --text-muted: #94a3b8;
     --sidebar-width: 260px;
+    --sidebar-mini-width: 85px;
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
@@ -43,10 +44,10 @@ body.app-page {
 
 /* Sidebar */
 .sidebar {
-    width: var(--sidebar-width);
+    width: var(--sidebar-width); /* Default: Full */
     background: #111827;
     border-right: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 1.5rem;
+    padding: 1.25rem 0.75rem;
     display: flex;
     flex-direction: column;
     position: fixed;
@@ -54,7 +55,78 @@ body.app-page {
     left: 0;
     height: 100vh;
     box-sizing: border-box;
-    z-index: 10;
+    z-index: 1000;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+/* Collapsed State (Mini Mode) */
+.sidebar.collapsed {
+    width: var(--sidebar-mini-width);
+}
+
+/* Expand on Hover ONLY if it is collapsed */
+.sidebar.collapsed:hover {
+    width: var(--sidebar-width);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+}
+
+/* Visibility Logic */
+.sidebar .logo-text,
+.sidebar .nav-text,
+.sidebar .user-info {
+    opacity: 1;
+    transition: opacity 0.2s linear;
+}
+
+/* Visibility & Alignment in Mini Mode */
+.sidebar.collapsed {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .nav-text,
+.sidebar.collapsed .user-info {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Centering icons ONLY when NOT hovered */
+.sidebar.collapsed:not(:hover) .logo,
+.sidebar.collapsed:not(:hover) .nav-item,
+.sidebar.collapsed:not(:hover) .user-profile {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    width: 100%;
+}
+
+/* Restore normal layout on Hover */
+.sidebar.collapsed:hover {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+.sidebar.collapsed:hover .logo-text,
+.sidebar.collapsed:hover .nav-text,
+.sidebar.collapsed:hover .user-info {
+    position: relative;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.sidebar.collapsed:hover .logo,
+.sidebar.collapsed:hover .nav-item,
+.sidebar.collapsed:hover .user-profile {
+    justify-content: flex-start;
+    padding: 0.85rem;
+}
+
+/* Hide toggle when collapsed and not hovered */
+.sidebar.collapsed:not(:hover) .sidebar-toggle {
+    display: none;
 }
 
 .logo {
@@ -64,51 +136,80 @@ body.app-page {
     margin-bottom: 2rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 1.25rem;
+    padding: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sidebar-toggle:hover {
+    background: rgba(255,255,255,0.05) !important;
+    color: white !important;
 }
 
 .nav-item {
-    padding: 0.75rem 1rem;
-    color: #9ca3af;
+    padding: 0.85rem;
+    color: #94a3b8;
     text-decoration: none;
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
-    transition: 0.2s;
-    display: block;
+    border-radius: 0.75rem;
+    margin-bottom: 0.4rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    overflow: hidden;
+}
+
+.nav-item i, .nav-item .icon {
+    font-size: 1.4rem;
+    width: 32px; /* Fixed width for icon column */
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .nav-item:hover,
 .nav-item.active {
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
 }
 
 .user-profile {
     margin-top: auto;
-    padding-top: 1rem;
+    padding: 0.85rem; /* Matched to nav-item padding */
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1.25rem;
 }
 
 .avatar {
-    width: 36px;
-    height: 36px;
+    width: 32px; /* Adjusted to better match logo/icons */
+    height: 32px;
     background: var(--primary);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
+    flex-shrink: 0;
 }
 
 /* Main Content */
 .main {
     margin-left: var(--sidebar-width);
-    padding: 2rem 3rem 3rem 2rem; /* Increased right and bottom padding */
+    padding: 2rem 3rem 3rem 2rem;
     width: calc(100% - var(--sidebar-width));
     box-sizing: border-box;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Adjust margin if sidebar is collapsed */
+body:has(.sidebar.collapsed) .main {
+    margin-left: var(--sidebar-mini-width);
+    width: calc(100% - var(--sidebar-mini-width));
 }
 
 header {
