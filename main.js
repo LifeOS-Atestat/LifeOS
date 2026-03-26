@@ -256,15 +256,48 @@ app.patch('/api/budget/add', requireLogin, (req, res) => {
 
 // --- ADD EXPENSE ---
 app.post('/api/expenses', requireLogin, (req, res) => {
-    const { amount, description, date } = req.body;
+    const { amount, description, date, category } = req.body;
     const userId = req.session.userId;
     const expenseDate = date || new Date().toISOString().slice(0, 10);
 
     try {
-        db.prepare(`INSERT INTO expenses (user_id, amount, description, date) VALUES (?, ?, ?, ?)`).run(userId, amount, description, expenseDate);
+        db.prepare(`INSERT INTO expenses (user_id, amount, description, date, category) VALUES (?, ?, ?, ?, ?)`).run(userId, amount, description, expenseDate, category || 'General');
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: "Eroare adăugare cheltuială" });
+    }
+});
+
+// --- BUDGET CATEGORIES API ---
+app.get('/api/budget/categories', requireLogin, (req, res) => {
+    const userId = req.session.userId;
+    try {
+        const rows = db.prepare(`SELECT * FROM budget_categories WHERE user_id = ?`).all(userId);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: "Eroare DB" });
+    }
+});
+
+app.post('/api/budget/categories', requireLogin, (req, res) => {
+    const { name, monthly_limit, color } = req.body;
+    const userId = req.session.userId;
+    try {
+        db.prepare(`INSERT OR REPLACE INTO budget_categories (user_id, name, monthly_limit, color) VALUES (?, ?, ?, ?)`).run(userId, name, monthly_limit || 0, color || '#6366f1');
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare adăugare categorie" });
+    }
+});
+
+app.delete('/api/budget/categories/:id', requireLogin, (req, res) => {
+    const id = req.params.id;
+    const userId = req.session.userId;
+    try {
+        db.prepare(`DELETE FROM budget_categories WHERE id = ? AND user_id = ?`).run(id, userId);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare ștergere" });
     }
 });
 
@@ -445,6 +478,275 @@ app.get('/api/next-activity', requireLogin, (req, res) => {
 });
 
 // ==========================================
+// Habit Tracker API
+// ==========================================
+
+function getStreak(habitId, userId) {
+    const logs = db.prepare(`SELECT date FROM habit_logs WHERE habit_id = ? AND user_id = ? ORDER BY date DESC`).all(habitId, userId);
+    if (logs.length === 0) return 0;
+
+    let streak = 0;
+    const now = new Date();
+    // Normalize to date string (local)
+    const todayStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = new Date(yesterday.getTime() - (yesterday.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+
+    const lastLog = logs[0].date;
+    if (lastLog !== todayStr && lastLog !== yesterdayStr) return 0;
+
+    let checkDate = new Date(lastLog);
+    for (const log of logs) {
+        const dStr = log.date;
+        const expected = new Date(checkDate.getTime() - (checkDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+
+        if (dStr === expected) {
+            streak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+            break;
+        }
+    }
+    return streak;
+}
+
+// --- GET HABITS ---
+app.get('/api/habits', requireLogin, (req, res) => {
+    const userId = req.session.userId;
+    const today = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+    try {
+        const habits = db.prepare(`
+            SELECT h.*, 
+            (SELECT COUNT(*) FROM habit_logs hl WHERE hl.habit_id = h.id AND hl.date = ?) as completed_today
+            FROM habits h WHERE h.user_id = ?
+        `).all(today, userId);
+
+        const habitsWithStreaks = habits.map(h => ({
+            ...h,
+            streak: getStreak(h.id, userId)
+        }));
+
+        res.json(habitsWithStreaks);
+    } catch (err) {
+        res.status(500).json({ error: "Eroare DB" });
+    }
+});
+
+// --- ADD HABIT ---
+app.post('/api/habits', requireLogin, (req, res) => {
+    const { title, color } = req.body;
+    const userId = req.session.userId;
+    try {
+        db.prepare(`INSERT INTO habits (user_id, title, color) VALUES (?, ?, ?)`).run(userId, title, color || '#6366f1');
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare adăugare" });
+    }
+});
+
+// --- TOGGLE HABIT ---
+app.post('/api/habits/:id/toggle', requireLogin, (req, res) => {
+    const habitId = req.params.id;
+    const userId = req.session.userId;
+    const today = new Date().toISOString().split('T')[0];
+
+    try {
+        const existing = db.prepare(`SELECT id FROM habit_logs WHERE habit_id = ? AND date = ? AND user_id = ?`).get(habitId, today, userId);
+        if (existing) {
+            db.prepare(`DELETE FROM habit_logs WHERE id = ?`).run(existing.id);
+            res.json({ success: true, completed: false });
+        } else {
+            db.prepare(`INSERT INTO habit_logs (habit_id, user_id, date) VALUES (?, ?, ?)`).run(habitId, userId, today);
+            res.json({ success: true, completed: true });
+        }
+    } catch (err) {
+        res.status(500).json({ error: "Eroare toggle" });
+    }
+});
+
+// --- DELETE HABIT ---
+app.delete('/api/habits/:id', requireLogin, (req, res) => {
+    const id = req.params.id;
+    const userId = req.session.userId;
+    try {
+        db.prepare(`DELETE FROM habit_logs WHERE habit_id = ? AND user_id = ?`).run(id, userId);
+        db.prepare(`DELETE FROM habits WHERE id = ? AND user_id = ?`).run(id, userId);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare ștergere" });
+    }
+});
+
+// ==========================================
+// Notes / Journal API
+// ==========================================
+
+app.get('/api/notes', requireLogin, (req, res) => {
+    const userId = req.session.userId;
+    try {
+        const rows = db.prepare(`SELECT * FROM notes WHERE user_id = ? ORDER BY created_at DESC`).all(userId);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: "Eroare DB" });
+    }
+});
+
+app.post('/api/notes', requireLogin, (req, res) => {
+    const { title, content, color } = req.body;
+    const userId = req.session.userId;
+    if (!content) return res.status(400).json({ error: "Conținutul este obligatoriu." });
+
+    try {
+        db.prepare(`INSERT INTO notes (user_id, title, content, color) VALUES (?, ?, ?, ?)`).run(userId, title, content, color || '#ffffff');
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare salvare" });
+    }
+});
+
+app.delete('/api/notes/:id', requireLogin, (req, res) => {
+    const id = req.params.id;
+    const userId = req.session.userId;
+    try {
+        db.prepare(`DELETE FROM notes WHERE id = ? AND user_id = ?`).run(id, userId);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare ștergere" });
+    }
+});
+
+// ==========================================
+// Savings / Goals API
+// ==========================================
+
+app.get('/api/savings', requireLogin, (req, res) => {
+    const userId = req.session.userId;
+    try {
+        const rows = db.prepare(`SELECT * FROM savings_goals WHERE user_id = ? ORDER BY created_at DESC`).all(userId);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: "Eroare DB" });
+    }
+});
+
+app.post('/api/savings', requireLogin, (req, res) => {
+    const { title, target_amount, color, deadline } = req.body;
+    const userId = req.session.userId;
+    if (!title || !target_amount) return res.status(400).json({ error: "Titlu și suma țintă obligatorii." });
+
+    try {
+        db.prepare(`INSERT INTO savings_goals (user_id, title, target_amount, color, deadline) VALUES (?, ?, ?, ?, ?)`).run(userId, title, target_amount, color || '#6366f1', deadline);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare salvare" });
+    }
+});
+
+app.post('/api/savings/:id/add', requireLogin, (req, res) => {
+    const { amount } = req.body;
+    const id = req.params.id;
+    const userId = req.session.userId;
+    if (!amount || amount <= 0) return res.status(400).json({ error: "Sumă invalidă." });
+
+    try {
+        db.prepare(`UPDATE savings_goals SET current_amount = current_amount + ? WHERE id = ? AND user_id = ?`).run(amount, id, userId);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare actualizare" });
+    }
+});
+
+app.delete('/api/savings/:id', requireLogin, (req, res) => {
+    const id = req.params.id;
+    const userId = req.session.userId;
+    try {
+        db.prepare(`DELETE FROM savings_goals WHERE id = ? AND user_id = ?`).run(id, userId);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare ștergere" });
+    }
+});
+
+// ==========================================
+// Hydration API
+// ==========================================
+
+app.get('/api/hydration', requireLogin, (req, res) => {
+    const userId = req.session.userId;
+    try {
+        const row = db.prepare(`SELECT SUM(amount_ml) as total FROM hydration WHERE user_id = ? AND date = CURRENT_DATE`).get(userId);
+        res.json({ total: row.total || 0 });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare DB" });
+    }
+});
+
+app.post('/api/hydration/add', requireLogin, (req, res) => {
+    const { amount_ml } = req.body;
+    const userId = req.session.userId;
+    if (!amount_ml || amount_ml <= 0) return res.status(400).json({ error: "Cantitate invalidă." });
+
+    try {
+        db.prepare(`INSERT INTO hydration (user_id, amount_ml) VALUES (?, ?)`).run(userId, amount_ml);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare salvare" });
+    }
+});
+
+// ==========================================
+// Analytics API
+// ==========================================
+
+app.get('/api/analytics', requireLogin, (req, res) => {
+    const userId = req.session.userId;
+    try {
+        // 1. Spending by Category
+        const categorySpending = db.prepare(`
+            SELECT category, SUM(amount) as total 
+            FROM expenses 
+            WHERE user_id = ? 
+            GROUP BY category
+        `).all(userId);
+
+        // 2. Daily Spending (Last 7 Days)
+        const dailySpending = db.prepare(`
+            SELECT date, SUM(amount) as total 
+            FROM expenses 
+            WHERE user_id = ? AND date >= date('now', '-6 days')
+            GROUP BY date
+            ORDER BY date ASC
+        `).all(userId);
+
+        // 3. Habits Progress (Last 7 Days)
+        const dailyHabits = db.prepare(`
+            SELECT date, COUNT(*) as completed 
+            FROM habit_logs 
+            WHERE user_id = ? AND date >= date('now', '-6 days')
+            GROUP BY date
+            ORDER BY date ASC
+        `).all(userId);
+        
+        // 4. Savings Total
+        const savingsTotal = db.prepare(`
+            SELECT SUM(current_amount) as total 
+            FROM savings_goals 
+            WHERE user_id = ?
+        `).get(userId);
+
+        res.json({
+            categorySpending,
+            dailySpending,
+            dailyHabits,
+            savingsTotal: savingsTotal.total || 0
+        });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare DB Analytics" });
+    }
+});
+
+// ==========================================
 // Periodic Tasks
 // ==========================================
 // Șterge activitățile finalizate de peste 1 oră
@@ -459,6 +761,56 @@ setInterval(() => {
         console.error("Eroare cleanup activități:", err);
     }
 }, 60000); // Rulează la fiecare minut
+
+// ==========================================
+// Kanban / Tasks API
+// ==========================================
+
+app.get('/api/tasks', requireLogin, (req, res) => {
+    const userId = req.session.userId;
+    try {
+        const rows = db.prepare(`SELECT * FROM tasks WHERE user_id = ? ORDER BY created_at DESC`).all(userId);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: "Eroare DB" });
+    }
+});
+
+app.post('/api/tasks', requireLogin, (req, res) => {
+    const { title, description, priority } = req.body;
+    const userId = req.session.userId;
+    if (!title) return res.status(400).json({ error: "Titlul este obligatoriu." });
+
+    try {
+        db.prepare(`INSERT INTO tasks (user_id, title, description, priority) VALUES (?, ?, ?, ?)`).run(userId, title, description, priority || 'medium');
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare salvare task" });
+    }
+});
+
+app.patch('/api/tasks/:id/status', requireLogin, (req, res) => {
+    const { status } = req.body;
+    const id = req.params.id;
+    const userId = req.session.userId;
+    try {
+        db.prepare(`UPDATE tasks SET status = ? WHERE id = ? AND user_id = ?`).run(status, id, userId);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare actualizare status" });
+    }
+});
+
+app.delete('/api/tasks/:id', requireLogin, (req, res) => {
+    const id = req.params.id;
+    const userId = req.session.userId;
+    try {
+        db.prepare(`DELETE FROM tasks WHERE id = ? AND user_id = ?`).run(id, userId);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare ștergere task" });
+    }
+});
 
 // ==========================================
 // Server Start

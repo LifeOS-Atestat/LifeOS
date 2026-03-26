@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistici - LifeOS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            min-height: 300px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(16, 185, 129, 0.15));
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="app-page">
+    <nav class="sidebar"></nav>
+
+    <main class="main">
+        <header>
+            <h2>Statistici și Analiză 📊</h2>
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 0.25rem;">O privire de ansamblu asupra progresului tău.</p>
+        </header>
+
+        <div class="analytics-grid">
+            <!-- Summary Card -->
+            <div class="stat-card" style="grid-column: 1 / -1; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 2rem;">
+                <div>
+                    <div style="font-size: 0.9rem; color: #94a3b8;">Suma Totală Economisită</div>
+                    <div id="totalSaved" style="font-size: 2.2rem; font-weight: 800; color: #10b981;">0.00 RON</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.9rem; color: #94a3b8;">Rata de Finalizare Obiceiuri (7 zile)</div>
+                    <div id="habitRate" style="font-size: 2.2rem; font-weight: 800; color: #6366f1;">0%</div>
+                </div>
+            </div>
+
+            <!-- Category Chart -->
+            <div class="chart-container">
+                <h3 style="margin-bottom: 1.5rem; font-size: 1rem;">💰 Cheltuieli pe Categorii</h3>
+                <canvas id="categoryChart"></canvas>
+            </div>
+
+            <!-- Spending Trends -->
+            <div class="chart-container">
+                <h3 style="margin-bottom: 1.5rem; font-size: 1rem;">📅 Tendințe Cheltuieli (Ultimele 7 Zile)</h3>
+                <canvas id="spendingChart"></canvas>
+            </div>
+
+            <!-- Habit Trends -->
+            <div class="chart-container">
+                <h3 style="margin-bottom: 1.5rem; font-size: 1rem;">📈 Performanță Obiceiuri</h3>
+                <canvas id="habitChart"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <!-- Clock Global -->
+    <div id="clock" class="app-clock">00:00:00</div>
+
+    <script src="/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initAnalytics();
+        });
+    </script>
+</body>
+
+</html>

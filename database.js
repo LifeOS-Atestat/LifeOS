@@ -87,14 +87,91 @@ function initializeDatabase() {
     console.log("Migrare: Am adăugat coloanele 'is_finished' și 'finished_at' în tabela 'activities'.");
   }
 
-  // 7. Configurare initiala Chei Admin
-  const keyCount = db.prepare("SELECT count(*) as count FROM admin_keys").get().count;
-  if (keyCount === 0) {
-    db.prepare("INSERT INTO admin_keys (key_value) VALUES ('ADMIN123')").run();
-    console.log("Cheie admin initiala generata: ADMIN123");
+  // 8. Tabel Habits (Personal Development)
+  db.prepare(`CREATE TABLE IF NOT EXISTS habits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      color TEXT DEFAULT '#6366f1',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )`).run();
+
+  // 9. Tabel Habit Logs (Track completions)
+  db.prepare(`CREATE TABLE IF NOT EXISTS habit_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      habit_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      date TEXT NOT NULL, /* Format: YYYY-MM-DD */
+      UNIQUE(habit_id, date),
+      FOREIGN KEY(habit_id) REFERENCES habits(id),
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )`).run();
+
+  // 10. Tabel Note / Jurnal
+  db.prepare(`CREATE TABLE IF NOT EXISTS notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      title TEXT,
+      content TEXT NOT NULL,
+      color TEXT DEFAULT '#ffffff',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )`).run();
+
+  // 11. Tabel Obiective Economisire (Savings Goals)
+  db.prepare(`CREATE TABLE IF NOT EXISTS savings_goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      target_amount REAL NOT NULL,
+      current_amount REAL DEFAULT 0,
+      color TEXT DEFAULT '#6366f1',
+      deadline DATE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )`).run();
+
+    db.prepare(`CREATE TABLE IF NOT EXISTS hydration (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      amount_ml INTEGER NOT NULL,
+      date DATE DEFAULT CURRENT_DATE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )`).run();
+
+  // 13. Tabel Categorii Buget
+  db.prepare(`CREATE TABLE IF NOT EXISTS budget_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      monthly_limit REAL DEFAULT 0,
+      color TEXT DEFAULT '#6366f1',
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      UNIQUE(user_id, name)
+    )`).run();
+
+  // 14. Tabel Task-uri (Kanban)
+  db.prepare(`CREATE TABLE IF NOT EXISTS tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      status TEXT DEFAULT 'todo', /* 'todo', 'in-progress', 'done' */
+      priority TEXT DEFAULT 'medium', /* 'low', 'medium', 'high' */
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )`).run();
+
+  // Migration for expenses: ADD category
+  const expenseCols = db.pragma('table_info(expenses)');
+  if (!expenseCols.some(c => c.name === 'category')) {
+    db.prepare("ALTER TABLE expenses ADD COLUMN category TEXT DEFAULT 'General'").run();
+    console.log("Migrare: Am adăugat coloana 'category' în tabela 'expenses'.");
   }
 
-  console.log('Tabelele "users", "admin_keys", "budgets", "expenses", "activities" sunt pregătite.');
+  console.log('Tabelele are ready: users, habits, notes, savings_goals, hydration, budget_categories, tasks, etc.');
 }
 
 /**

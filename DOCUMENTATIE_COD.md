@@ -17,9 +17,14 @@ Acesta este fișierul principal care configurează serverul web Express.
     *   **Auth**: `/api/register`, `/api/login`, `/api/logout`. Se ocupă de verificarea parolelor (cu `bcrypt`) și crearea sesiunilor.
     *   **Economic**:
         *   `GET /api/budget`: Calculează bugetul total, cheltuielile și bugetul zilnic recomandat folosind agregate SQL (`SUM`).
-        *   `POST /api/expenses`: Inserează o nouă cheltuială.
+        *   `GET /api/budget/categories`: Preia toate categoriile și calculează gradul de ocupare al limitelor setate.
+        *   `POST /api/expenses`: Inserează o nouă cheltuială, asociind-o cu o categorie specifică.
+    *   **Productivitate (Kanban)**:
+        *   `GET /api/tasks`: Returnează lista sarcinilor.
+        *   `PATCH /api/tasks/:id/status`: Mută un task între coloane (todo, in-progress, done).
+        *   `DELETE /api/tasks/:id`: Ștergere securizată pe baza ID-ului de utilizator.
     *   **Time**:
-        *   `GET /api/next-activity`: Filtrează și sortează activitățile pentru a găsi următoarele 3 evenimente din viitor.
+        *   `GET /api/next-activity`: Filtrează și sortează activitățile pentru a găsi următoarele 3 evenimente din viitor, calculând timpul rămas în minute.
 
 ### 2. `database.js` (Baza de Date)
 Gestionează interacțiunea directă cu fișierul SQLite `database.db`.
@@ -52,9 +57,9 @@ Acest fișier conține "creierul" interfeței. Este modularizat pe funcționalit
     *   `initDashboard()`:
         *   Apelează `/api/budget` pentru a popula widget-ul financiar și bara de progres.
         *   Apelează `/api/next-activity` pentru a genera lista cu timeline-ul.
-    *   `renderActivity(act)`: O funcție complexă care decide unde să plaseze o activitate în calendarul vizual:
-        *   Dacă e **fixă**, parsează data și o pune în coloana zilei corespunzătoare.
-        *   Dacă e **recurentă** (ex: "Monday 14:00"), o plasează în coloana "Luni".
+    *   `initTasks()`: Configurează interacțiunea Drag-and-Drop între coloanele Kanban și salvează starea în DB.
+    *   `getStreak()`: Algoritm ce analizează istoricul log-urilor pentru a determina consecvența fără întreruperi.
+    *   `showConfirm()`: Manager de interacțiune asincronă care afișează confirmări modale personlizate.
 
 ### 3. Securitate & Validare
 *   Validarea formularelor se face atât în HTML (`required`, `type="email"`) cât și în JavaScript înainte de trimitere.

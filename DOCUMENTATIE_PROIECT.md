@@ -35,22 +35,28 @@ Pagina principală oferă o privire de ansamblu rapidă:
 *   **Timeline**: Lista următoarelor 3 activități planificate, ordonate cronologic.
 *   **Acțiuni Rapide**: Butoane pentru acces imediat la adăugarea de cheltuieli sau activități.
 
-### 💰 Modul Economic (Buget)
-- Setarea bugetului lunar.
-- Adăugarea cheltuielilor zilnice.
-- **Vizualizare Grafică Avansată**: Diagramă (Pie Chart) detaliată pentru distribuția bugetului pe fiecare cheltuială individuală.
-- Algoritm de vizibilitate pentru sume mici în grafic.
-- Calcul automat al bugetului zilnic recomandat.
+### 💰 Modul Economic (Buget Avansat)
+*   **Gestiune Buget**: Setarea bugetului lunar și adăugarea de fonduri.
+*   **Categorii Personalizate**: Clasificarea cheltuielilor pe categorii definite de utilizator (ex: Mâncare, Transport, Divertisment).
+*   **Limite Lunare**: Setarea de praguri valorice maxime pe fiecare categorie, cu bare de progres dedicate și alerte vizuale (⚠️) la atingerea limitei.
+*   **Vizualizare Grafică**: Diagramă tip "Doughnut" care oferă o perspectivă clară asupra distribuției cheltuielilor pe categorii.
+*   **Algoritm de Calcul**: Determinarea automată a bugetului zilnic recomandat în funcție de zilele rămase din lună.
+
+### 📋 Modul Productivitate (Kanban & Obiceiuri)
+*   **Kanban Board**: Sistem de gestionare a proiectelor prin coloane ("De făcut", "În lucru", "Finalizat") cu funcționalitate intuitivă de Drag-and-Drop.
+*   **Prioritizarea Task-urilor**: Posibilitatea de a seta niveluri de prioritate (Scăzut, Normal, Urgent) pentru fiecare sarcină.
+*   **Habit Tracker**: Monitorizarea succesivității obiceiurilor zilnice. Sistemul calculează automat **Streak-ul** (zile consecutive de succes) pentru a încuraja disciplina utilizatorului.
+*   **Widget-uri Interactive**: Vizualizarea rapidă a sarcinilor active și a progresului obiceiurilor direct pe Dashboard.
 
 ### 📅 Modul Time Management (Orar)
-- Calendar săptămânal interactiv.
-- Adăugare activități fixe și recurente.
-- **Ștergere Activități**: Funcționalitate de ștergere cu confirmare direct în interfață.
-- **Sugestii Inteligente**: Un algoritm simplu care propune intervale orare libere pentru activități noi.
+*   **Calendar Săptămânal**: Vizualizare interactivă a activităților, cu marcarea distinctă a zilei curente.
+*   **Finalizarea Activităților**: Buton "Terminat (✓)" care marchează vizual sarcina și o păstrează în istoric timp de o oră înainte de eliminarea automată.
+*   **Indicatori de Timp**: Afișarea timpului rămăs până la următoarea activitate (ex: "În 1h 20min") și a numărului de zile până la evenimentele viitoare.
 
 ### ⚙️ Setări și Personalizare
-- **Avatar Personalizat**: Posibilitatea de a încărca o poză de profil (JPG, PNG).
-- Pagina de setări dedicată.
+*   **Avatar Personalizat**: Încărcare de poze de profil direct din interfață.
+*   **Design Unic**: Interfață cu tematică întunecată (Dark Mode) și efecte de Glassmorphism, optimizată pentru experiența utilizatorului.
+*   **Confirmări Globale**: Sistem integrat de mesaje de confirmare (modale) personalizate, înlocuind ferestrele standard de sistem pentru o coerență vizuală sporită.
 
 ## 4. Arhitectura Aplicației
 Aplicația este structurată pe modelul **Client-Server**:

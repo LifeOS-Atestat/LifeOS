@@ -7,6 +7,7 @@
     <title>Buget - LifeOS</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .grid {
@@ -18,27 +19,7 @@
 </head>
 
 <body class="app-page">
-    <nav class="sidebar">
-        <div class="logo">
-            <div
-                style="width: 24px; height: 24px; background: linear-gradient(135deg, #6366f1, #a855f7); border-radius: 6px;">
-            </div>
-            LifeOS
-        </div>
-        <a href="/dashboard" class="nav-item">🏠 Acasă</a>
-        <a href="/budget" class="nav-item active">💰 Buget</a>
-        <a href="/schedule" class="nav-item">📅 Timp</a>
-        <a href="/settings" class="nav-item">⚙️ Setări</a>
-
-        <div class="user-profile">
-            <div class="avatar" id="userInitial">U</div>
-            <div>
-                <div style="font-size: 0.9rem; font-weight: 500;" id="userName">Loading...</div>
-                <button onclick="logout()"
-                    style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem; padding: 0;">Deconectare</button>
-            </div>
-        </div>
-    </nav>
+    <nav class="sidebar"></nav>
     <main class="main">
         <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
             <h2>Bugetul Tău</h2>
@@ -70,8 +51,8 @@
             </div>
         </div>
 
-        <!-- Actions & Recent Activity -->
-        <div class="grid" style="grid-template-columns: 1fr 2fr;">
+        <!-- Actions, Categories & Recent Activity -->
+        <div class="grid" style="grid-template-columns: 1fr 1fr 2fr;">
             <div class="card">
                 <h3>Setări Rapide</h3>
                 <button onclick="openModal('budgetModal')" style="width: 100%; margin-top: 1rem;"
@@ -80,6 +61,14 @@
                     class="btn-success">💰 Adaugă Fonduri</button>
                 <button onclick="openModal('expenseModal')" style="width: 100%; margin-top: 0.75rem;"
                     class="btn-primary">➕ Adaugă Cheltuială</button>
+                <button onclick="openModal('categoryModal')" style="width: 100%; margin-top: 0.75rem; background: rgba(99, 102, 241, 0.1); color: var(--primary);"
+                    class="btn-secondary">🏷️ Gestionare Categorii</button>
+            </div>
+            <div class="card" id="categoriesCard">
+                <h3>Limite pe Categorii</h3>
+                <div id="categoriesList" style="margin-top: 1rem;">
+                    <div style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">Se încarcă...</div>
+                </div>
             </div>
             <div class="card">
                 <h3>Ultimele Cheltuieli</h3>
@@ -94,7 +83,8 @@
     <div id="budgetModal" class="modal">
         <div class="card">
             <h3>Setează Bugetul Lunar</h3>
-            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">Aceasta va suprascrie bugetul curent.</p>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">Aceasta va suprascrie bugetul curent.
+            </p>
             <input type="number" id="newBudgetAmount" placeholder="Suma (RON)" style="margin-bottom: 1rem;">
             <div style="display: flex; gap: 0.5rem;">
                 <button onclick="saveBudget()" class="btn-primary" style="flex: 1;">Salvează</button>
@@ -107,7 +97,8 @@
     <div id="addBudgetModal" class="modal">
         <div class="card">
             <h3>Adaugă Fonduri</h3>
-            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">Adaugă bani la bugetul lunar existent.</p>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">Adaugă bani la bugetul lunar existent.
+            </p>
             <input type="number" id="topupAmount" placeholder="Suma de adăugat (RON)" style="margin-bottom: 1rem;">
             <div style="display: flex; gap: 0.5rem;">
                 <button onclick="saveAddedBudget()" class="btn-success" style="flex: 1;">Adaugă</button>
@@ -118,10 +109,17 @@
 
     <!-- Modal Cheltuiala -->
     <div id="expenseModal" class="modal">
-        <div class="card">
+        <div class="card" style="max-width: 400px; width: 90%;">
             <h3>Adaugă Cheltuială</h3>
             <input type="number" id="expenseAmount" placeholder="Suma (RON)" style="margin-top: 1rem;">
             <input type="text" id="expenseDesc" placeholder="Descriere (ex: Pizza)" style="margin: 0.5rem 0;">
+            
+            <label style="font-size: 0.85rem; color: #94a3b8; margin-top: 1rem; margin-bottom: 0.3rem; display: block;">Categorie</label>
+            <select id="expenseCategory" style="margin-bottom: 1.5rem;">
+                <option value="General">General</option>
+                <!-- Categorii dinamice -->
+            </select>
+
             <div style="display: flex; gap: 0.5rem;">
                 <button onclick="saveExpense()" class="btn-primary" style="flex: 1;">Adaugă</button>
                 <button onclick="closeModal('expenseModal')" class="btn-secondary" style="flex: 1;">Anulează</button>
@@ -129,7 +127,32 @@
         </div>
     </div>
 
+    <!-- Modal Gestionare Categorii -->
+    <div id="categoryModal" class="modal">
+        <div class="card" style="max-width: 450px; width: 95%;">
+            <h3>Gestionare Categorii</h3>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 1rem;">Setează limite lunare pe tipuri de cheltuieli.</p>
+            
+            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+                <h4 style="margin-bottom: 0.75rem; font-size: 0.9rem;">Adaugă / Editează Categorie</h4>
+                <div class="form-group" style="margin-bottom: 0.5rem;">
+                    <input type="text" id="catName" placeholder="Nume Categorie (ex: Mâncare)" style="font-size: 0.9rem;">
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <input type="number" id="catLimit" placeholder="Limită Lunară (RON)" style="flex: 2; font-size: 0.9rem;">
+                    <input type="color" id="catColor" value="#6366f1" style="height: 42px; flex: 1; cursor: pointer;">
+                </div>
+                <button onclick="saveCategory()" class="btn-primary" style="width: 100%; padding: 0.6rem;">Salvează Categorie</button>
+            </div>
+
+            <div id="manageCategoriesList" style="max-height: 200px; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                <!-- Lista de categorii cu buton de ștergere -->
+            </div>
+
+            <button onclick="closeModal('categoryModal')" class="btn-secondary" style="width: 100%; margin-top: 1rem;">Închide</button>
+        </div>
+    </div>
+
     <script src="/app.js"></script>
 </body>
-
-</html>
+</html>

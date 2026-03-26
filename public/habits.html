@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obiceiuri - LifeOS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+</head>
+
+<body class="app-page">
+    <nav class="sidebar"></nav>
+
+    <main class="main">
+        <header style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2>Obiceiurile Tale 📈</h2>
+                <div id="dateDisplay" style="color: #94a3b8; margin-top: 0.25rem;"></div>
+            </div>
+            <button onclick="openModal('habitModal')" class="btn-primary">➕ Adaugă Obicei</button>
+        </header>
+
+        <section style="margin-top: 2rem;">
+            <div id="habitsList" class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                <!-- Dinamic Habits -->
+                <div style="padding: 2rem; text-align: center; color: #94a3b8; font-style: italic;">Se încarcă obiceiurile...</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Adaugă Obicei -->
+    <div id="habitModal" class="modal">
+        <div class="card" style="max-width: 400px; width: 90%;">
+            <h3>Adaugă Obicei Nou</h3>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 1rem;">Ceva ce vrei să faci în fiecare zi.</p>
+            
+            <div class="form-group">
+                <label>Nume Obicei</label>
+                <input type="text" id="habitTitle" placeholder="Ex: Bea apă, Citește, Sală...">
+            </div>
+            
+            <div class="form-group">
+                <label>Culoare</label>
+                <input type="color" id="habitColor" value="#6366f1" style="height: 40px; cursor: pointer;">
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                <button onclick="saveHabit()" class="btn-primary" style="flex: 1;">Salvează</button>
+                <button onclick="closeModal('habitModal')" class="btn-secondary" style="flex: 1;">Anulează</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clock Global -->
+    <div id="clock" class="app-clock">00:00:00</div>
+
+    <script src="/app.js"></script>
+</body>
+
+</html>

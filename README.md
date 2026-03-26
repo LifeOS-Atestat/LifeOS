@@ -11,19 +11,24 @@
 - Sesiuni persistente.
 - Opțiune pentru conturi de Administrator.
 
-### 💰 Modul Economic (Buget)
-- Setarea bugetului lunar.
-- Adăugarea cheltuielilor zilnice.
-- **Vizualizare Grafică**: Diagramă (Pie Chart) pentru distribuția bugetului.
+### 💰 Modul Economic (Buget Avansat)
+- Setarea bugetului lunar și adăugarea de fonduri.
+- **Categorii Personalizate**: Adăugarea cheltuielilor pe categorii (Mâncare, Transport, etc.).
+- **Limite Lunare**: Setarea de praguri valorice pe fiecare categorie cu alerte vizuale (⚠️) la depășire.
+- **Vizualizare Grafică**: Diagramă (Doughnut Chart) grupată pe categorii.
 - Calcul automat al bugetului zilnic recomandat.
-- Bara de progres pentru cheltuieli.
 
 ### 📅 Modul Time Management (Orar)
-- Calendar săptămânal interactiv.
+- Calendar săptămânal interactiv cu evidențierea zilei curente.
 - Adăugare activități:
   - **Fixe** (Ex: "Teză" pe 20 Mai la 10:00).
   - **Recurente** (Ex: "Antrenament" în fiecare Luni la 18:00).
-- Sistem de ștergere a activităților cu confirmare inline.
+- Sistem de finalizare a activităților (Terminat ✓) cu ștergere temporizată.
+
+### 📋 Modul Productivitate (Kanban & Obiceiuri)
+- **Kanban Board**: Gestionarea proiectelor complexe prin coloane (De făcut, În lucru, Finalizat) cu funcționalitate Drag-and-Drop.
+- **Habit Tracker**: Monitorizarea obiceiurilor zilnice cu sistem de **🔥 Streaks** (zile consecutive) pentru motivare.
+- **Widget Dashboard**: Vizualizarea rapidă a task-urilor active și a progresului obiceiurilor direct pe pagina principală.
 
 ## 🛠️ Tehnologii Utilizate
 

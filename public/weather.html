@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vremea - LifeOS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <style>
+        .weather-main {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(16, 185, 129, 0.2));
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .forecast-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .forecast-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.25rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .forecast-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .weather-detail {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+
+        .weather-detail b {
+            color: white;
+        }
+    </style>
+</head>
+
+<body class="app-page">
+    <nav class="sidebar"></nav>
+
+    <main class="main">
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2>Prognoza Meteo 🌤️</h2>
+                    <div id="dateDisplay" style="color: #94a3b8; margin-top: 0.25rem;"></div>
+                </div>
+                <!-- Search Bar -->
+                <div style="display: flex; gap: 0.5rem; background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <input type="text" id="citySearch" placeholder="Caută oraș (ex: Brașov)..." 
+                        style="background: transparent; border: none; color: white; outline: none; padding: 0.25rem 0.5rem; width: 180px;">
+                    <button onclick="manualSearch()" class="btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Caută</button>
+                    <button onclick="resetToGPS()" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="Folosește GPS">📍</button>
+                </div>
+            </div>
+        </header>
+
+        <section style="margin-top: 2rem;">
+            <!-- Current Weather Detailed -->
+            <div id="weatherMain" class="weather-main">
+                <div style="text-align: center; flex: 1; min-width: 200px;">
+                    <div id="mainIcon" style="font-size: 5rem; margin-bottom: 0.5rem;">⏳</div>
+                    <div id="mainDesc" style="font-size: 1.2rem; color: #94a3b8; text-transform: capitalize;">Se încarcă...</div>
+                </div>
+                
+                <div style="flex: 1; min-width: 200px; text-align: center;">
+                    <div id="mainTemp" style="font-size: 4.5rem; font-weight: 800; letter-spacing: -2px;">--°</div>
+                    <div id="mainLoc" style="color: #6366f1; font-weight: 600; font-size: 1.1rem;">București, RO</div>
+                </div>
+
+                <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div class="weather-detail">💧 Umiditate: <b id="mainHumidity">--%</b></div>
+                    <div class="weather-detail">💨 Vânt: <b id="mainWind">-- km/h</b></div>
+                    <div class="weather-detail">🌡️ Senzație: <b id="mainFeels">--°</b></div>
+                </div>
+            </div>
+
+            <!-- 7 Day Forecast -->
+            <h3 style="margin-bottom: 1.5rem;">Următoarele 7 zile</h3>
+            <div id="forecastGrid" class="forecast-grid">
+                <!-- Forecast Cards Dynamic -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Clock Global -->
+    <div id="clock" class="app-clock">00:00:00</div>
+
+    <script src="/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initWeatherPage();
+        });
+    </script>
+</body>
+
+</html>

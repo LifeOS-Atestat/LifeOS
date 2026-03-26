@@ -7,30 +7,11 @@
     <title>Orar - LifeOS</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
 </head>
 
 <body class="app-page">
-    <nav class="sidebar">
-        <div class="logo">
-            <div
-                style="width: 24px; height: 24px; background: linear-gradient(135deg, #6366f1, #a855f7); border-radius: 6px;">
-            </div>
-            LifeOS
-        </div>
-        <a href="/dashboard" class="nav-item">🏠 Acasă</a>
-        <a href="/budget" class="nav-item">💰 Buget</a>
-        <a href="/schedule" class="nav-item active">📅 Timp</a>
-        <a href="/settings" class="nav-item">⚙️ Setări</a>
-
-        <div class="user-profile">
-            <div class="avatar" id="userInitial">U</div>
-            <div>
-                <div style="font-size: 0.9rem; font-weight: 500;" id="userName">Loading...</div>
-                <button onclick="logout()"
-                    style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem; padding: 0;">Deconectare</button>
-            </div>
-        </div>
-    </nav>
+    <nav class="sidebar"></nav>
 
     <main class="main">
         <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
