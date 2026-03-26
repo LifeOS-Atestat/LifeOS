@@ -21,8 +21,9 @@
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
-            padding: 1.5rem;
-            min-height: 300px;
+            padding: 1rem; /* Reduced from 1.5rem */
+            height: 350px;
+            position: relative;
         }
 
         .stat-card {
@@ -58,20 +59,20 @@
 
             <!-- Category Chart -->
             <div class="chart-container">
-                <h3 style="margin-bottom: 1.5rem; font-size: 1rem;">💰 Cheltuieli pe Categorii</h3>
-                <canvas id="categoryChart"></canvas>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1rem; padding-left: 0.5rem;">💰 Cheltuieli pe Categorii</h3>
+                <div style="height: 290px; position: relative;"><canvas id="categoryChart"></canvas></div>
             </div>
 
             <!-- Spending Trends -->
             <div class="chart-container">
-                <h3 style="margin-bottom: 1.5rem; font-size: 1rem;">📅 Tendințe Cheltuieli (Ultimele 7 Zile)</h3>
-                <canvas id="spendingChart"></canvas>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1rem; padding-left: 0.5rem;">📅 Tendințe Cheltuieli (Ultimele 7 Zile)</h3>
+                <div style="height: 290px; position: relative;"><canvas id="spendingChart"></canvas></div>
             </div>
 
             <!-- Habit Trends -->
             <div class="chart-container">
-                <h3 style="margin-bottom: 1.5rem; font-size: 1rem;">📈 Performanță Obiceiuri</h3>
-                <canvas id="habitChart"></canvas>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1rem; padding-left: 0.5rem;">📈 Performanță Obiceiuri</h3>
+                <div style="height: 290px; position: relative;"><canvas id="habitChart"></canvas></div>
             </div>
         </div>
     </main>

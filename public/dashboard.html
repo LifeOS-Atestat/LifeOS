@@ -20,18 +20,40 @@
         </header>
 
         <div class="grid">
+            <!-- Quick Actions -->
+            <div class="span-3" style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                <a href="/budget" class="btn-action btn-primary"
+                    style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <span>➕</span> Cheltuială
+                </a>
+                <a href="/schedule" class="btn-action btn-secondary"
+                    style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(255,255,255,0.05);">
+                    <span>📅</span> Activitate
+                </a>
+                <a href="/notes" class="btn-action btn-secondary"
+                    style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(255,255,255,0.05);">
+                    <span>📝</span> Notă
+                </a>
+                <a href="/tasks" class="btn-action btn-secondary"
+                    style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(99, 102, 241, 0.1); color: var(--primary);">
+                    <span>📋</span> Task Nou
+                </a>
+            </div>
+
             <!-- Row 1: The Indicators (Small Cards) -->
             <!-- 1. Weather Card -->
             <div class="card" style="padding: 1rem;">
                 <h3 style="margin-bottom: 0.5rem; font-size: 0.9rem;">
                     <span>🌤️ Vreme</span>
-                    <a href="/weather" style="color: var(--primary); text-decoration: none; font-size: 0.8rem;">Mai mult &rarr;</a>
+                    <a href="/weather" style="color: var(--primary); text-decoration: none; font-size: 0.8rem;">Mai mult
+                        &rarr;</a>
                 </h3>
                 <div id="weatherDashboard" style="display: flex; align-items: center; gap: 0.75rem;">
                     <div id="weatherIcon" style="font-size: 1.8rem;">⏳</div>
                     <div>
                         <div id="weatherTemp" style="font-size: 1.4rem; font-weight: 700; line-height: 1;">--°C</div>
-                        <div id="weatherDesc" style="color: #94a3b8; font-size: 0.8rem; margin-top: 2px;">Se încarcă...</div>
+                        <div id="weatherDesc" style="color: #94a3b8; font-size: 0.8rem; margin-top: 2px;">Se încarcă...
+                        </div>
                     </div>
                 </div>
                 <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b; font-weight: 500;" id="weatherLoc">
@@ -48,23 +70,32 @@
                     <div class="progress-bar" id="waterBar" style="width: 0%; background: #3b82f6;"></div>
                 </div>
                 <div style="display: flex; gap: 0.3rem; justify-content: center;">
-                    <button onclick="addWater(250)" class="btn-mini" style="flex: 1; padding: 0.2rem; font-size: 0.7rem;">+250</button>
-                    <button onclick="addWater(500)" class="btn-mini" style="flex: 1; padding: 0.2rem; font-size: 0.7rem;">+500</button>
+                    <button onclick="addWater(250)" class="btn-mini"
+                        style="flex: 1; padding: 0.2rem; font-size: 0.7rem;">+250</button>
+                    <button onclick="addWater(500)" class="btn-mini"
+                        style="flex: 1; padding: 0.2rem; font-size: 0.7rem;">+500</button>
                 </div>
             </div>
 
             <!-- 3. Pomodoro Timer -->
             <div class="card" style="padding: 1rem; text-align: center;">
                 <h3 style="margin-bottom: 0.5rem; font-size: 0.9rem;">🍅 Pomodoro</h3>
-                <div id="pomodoroTimer" style="font-size: 1.8rem; font-weight: 800; margin: 0.2rem 0; font-variant-numeric: tabular-nums;">25:00</div>
+                <div id="pomodoroTimer"
+                    style="font-size: 1.8rem; font-weight: 800; margin: 0.2rem 0; font-variant-numeric: tabular-nums;">
+                    25:00</div>
                 <div style="display: flex; gap: 0.3rem; justify-content: center;">
-                    <button onclick="startPomodoro()" class="btn-primary" id="pomoStartBtn" style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">Start</button>
-                    <button onclick="pausePomodoro()" class="btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">Pas</button>
-                    <button onclick="resetPomodoro()" class="btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">↺</button>
+                    <button onclick="startPomodoro()" class="btn-primary" id="pomoStartBtn"
+                        style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">Start</button>
+                    <button onclick="pausePomodoro()" class="btn-secondary"
+                        style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">Pauză</button>
+                    <button onclick="resetPomodoro()" class="btn-secondary"
+                        style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">Reset</button>
                 </div>
                 <div style="margin-top: 0.4rem; display: flex; justify-content: center; gap: 0.3rem;">
-                    <button onclick="setPomodoroMode('work')" class="btn-mini active" id="modeWork" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">Work</button>
-                    <button onclick="setPomodoroMode('short')" class="btn-mini" id="modeShort" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">Rest</button>
+                    <button onclick="setPomodoroMode('work')" class="btn-mini active" id="modeWork"
+                        style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">Work</button>
+                    <button onclick="setPomodoroMode('short')" class="btn-mini" id="modeShort"
+                        style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">Rest</button>
                 </div>
             </div>
 
@@ -73,7 +104,8 @@
             <div class="card span-2">
                 <h3>
                     <span>💰 Situație Financiară</span>
-                    <a href="/budget" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">Detalii &rarr;</a>
+                    <a href="/budget" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">Detalii
+                        &rarr;</a>
                 </h3>
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 1rem;">
                     <div>
@@ -86,7 +118,8 @@
                     </div>
                 </div>
                 <div style="margin-top: 1.5rem;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.5rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.5rem;">
                         <span id="spentLabel">Se încarcă...</span>
                         <span id="daysLabel">Se încarcă...</span>
                     </div>
@@ -100,10 +133,13 @@
             <div class="card">
                 <h3>
                     <span>💎 Economii</span>
-                    <a href="/savings" style="color: var(--primary); text-decoration: none; font-size: 0.8rem;">Toate &rarr;</a>
+                    <a href="/savings" style="color: var(--primary); text-decoration: none; font-size: 0.8rem;">Toate
+                        &rarr;</a>
                 </h3>
                 <div id="savingsSummary">
-                    <div style="padding: 1rem; text-align: center; color: #94a3b8; font-style: italic; font-size: 0.9rem;">Se încarcă...</div>
+                    <div
+                        style="padding: 1rem; text-align: center; color: #94a3b8; font-style: italic; font-size: 0.9rem;">
+                        Se încarcă...</div>
                 </div>
             </div>
 
@@ -112,7 +148,8 @@
             <div class="card span-2">
                 <h3>
                     <span>📅 Următoarele Activități</span>
-                    <a href="/schedule" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">Orar &rarr;</a>
+                    <a href="/schedule" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">Orar
+                        &rarr;</a>
                 </h3>
                 <div id="timelineList" style="margin-top: 1rem;">
                     <div style="padding: 1rem; text-align: center; color: #94a3b8;">Se încarcă...</div>
@@ -123,15 +160,18 @@
             <div class="card">
                 <h3>
                     <span>📈 Obiceiuri</span>
-                    <a href="/habits" style="color: var(--primary); text-decoration: none; font-size: 0.8rem;">Toate &rarr;</a>
+                    <a href="/habits" style="color: var(--primary); text-decoration: none; font-size: 0.8rem;">Toate
+                        &rarr;</a>
                 </h3>
                 <div id="habitProgress" style="margin-top: 1rem;">
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <div>
                             <div style="font-size: 0.85rem; color: #94a3b8;">Progres azi</div>
-                            <span id="habitStatText" style="font-size: 1.6rem; font-weight: 700; color: white;">0 / 0</span>
+                            <span id="habitStatText" style="font-size: 1.6rem; font-weight: 700; color: white;">0 /
+                                0</span>
                         </div>
-                        <div style="width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;" id="habitCircle">🔥</div>
+                        <div style="width: 44px; height: 44px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;"
+                            id="habitCircle">🔥</div>
                     </div>
                     <div class="progress-container" style="margin-top: 0.8rem;">
                         <div class="progress-bar" id="habitBar" style="width: 0%; background: #10b981;"></div>
@@ -143,27 +183,14 @@
             <div class="card span-2">
                 <h3>
                     <span>📋 Proiecte Active</span>
-                    <a href="/tasks" style="color: var(--primary); text-decoration: none; font-size: 0.8rem;">Dashboard Proiecte &rarr;</a>
+                    <a href="/tasks" style="color: var(--primary); text-decoration: none; font-size: 0.8rem;">Dashboard
+                        Proiecte &rarr;</a>
                 </h3>
-                <div id="tasksDashboard" style="margin-top: 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div style="padding: 1rem; text-align: center; color: #94a3b8; grid-column: 1/-1;">Se încarcă task-urile...</div>
+                <div id="tasksDashboard"
+                    style="margin-top: 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="padding: 1rem; text-align: center; color: #94a3b8; grid-column: 1/-1;">Se încarcă
+                        task-urile...</div>
                 </div>
-            </div>
-
-            <!-- 9. Quick Actions -->
-            <div class="span-3" style="display: flex; gap: 1rem; margin-top: 0.5rem;">
-                <a href="/budget" class="btn-action btn-primary" style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                    <span>➕</span> Cheltuială
-                </a>
-                <a href="/schedule" class="btn-action btn-secondary" style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(255,255,255,0.05);">
-                    <span>📅</span> Activitate
-                </a>
-                <a href="/notes" class="btn-action btn-secondary" style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(255,255,255,0.05);">
-                    <span>📝</span> Notă
-                </a>
-                <a href="/tasks" class="btn-action btn-secondary" style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(99, 102, 241, 0.1); color: var(--primary);">
-                    <span>📋</span> Task Nou
-                </a>
             </div>
         </div>
     </main>
