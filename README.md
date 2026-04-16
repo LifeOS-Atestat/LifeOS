@@ -26,9 +26,17 @@
 - Sistem de finalizare a activităților (Terminat ✓) cu ștergere temporizată.
 
 ### 📋 Modul Productivitate (Kanban & Obiceiuri)
-- **Kanban Board**: Gestionarea proiectelor complexe prin coloane (De făcut, În lucru, Finalizat) cu funcționalitate Drag-and-Drop.
+- **Kanban Board**: Gestionarea proiectelor complexe prin coloane (De făcut, În lucru, Finalizat) cu funcționalitate Drag-and-Drop și **căutare în timp real**.
 - **Habit Tracker**: Monitorizarea obiceiurilor zilnice cu sistem de **🔥 Streaks** (zile consecutive) pentru motivare.
+- **Notes**: Sistem de notițe rapide cu prioritizare pe culori, auto-salvare drafturi și filtrare rapidă.
 - **Widget Dashboard**: Vizualizarea rapidă a task-urilor active și a progresului obiceiurilor direct pe pagina principală.
+
+### ✨ Personalizare și QoL (Power User)
+- **Tema Duală**: Comutare rapidă între **Light Mode** și **Dark Mode** pentru o experiență vizuală adaptată.
+- **Accent Color Picker**: Personalizarea culorii principale a întregii interfețe.
+- **Scurtături de Tastatură**: `Alt+N` (Notă), `Alt+T` (Task), `Alt+F` (Căutare), `Esc` (Modale).
+- **Export Date**: Salvgardarea întregii baze de date (JSON) sau a istoricului financiar (CSV/Excel).
+- **Design Modern**: Animații de tip Skeleton Loaders și efecte de Confetti la finalizarea obiectivelor.
 
 ## 🛠️ Tehnologii Utilizate
 

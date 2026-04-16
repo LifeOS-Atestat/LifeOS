@@ -65,6 +65,23 @@ const API = {
     analytics: '/api/analytics'
 };
 
+function showSkeletons(containerId, type, count = 3) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    let html = '';
+    for (let i = 0; i < count; i++) {
+        if (type === 'card') {
+            html += `<div class="skeleton skeleton-card" style="margin-bottom: 1.5rem;"></div>`;
+        } else if (type === 'task') {
+            html += `<div class="skeleton" style="height: 60px; margin-bottom: 0.75rem;"></div>`;
+        } else if (type === 'inline') {
+            html += `<div class="skeleton skeleton-inline" style="width: ${Math.random() * 40 + 40}%; margin-bottom: 0.5rem;"></div><br>`;
+        }
+    }
+    container.innerHTML = html;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Identify Page Type
     const isAuthPage = document.querySelector('body.auth-page');
@@ -72,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Global Auth Check for App Pages
     if (isAppPage) {
+        applyTheme();
         checkAuth();
         initDateDisplay();
         renderSidebar(); // Shared Nav
@@ -100,7 +118,7 @@ function renderSidebar() {
     if (!sidebar) return;
 
     const path = window.location.pathname;
-    
+
     // Configurație Meniu
     const menuItems = [
         { href: '/dashboard', icon: '🏠', text: 'Acasă' },
@@ -143,7 +161,7 @@ function renderSidebar() {
 
     const userName = window.currentUser ? window.currentUser.username : 'Loading...';
     const userInitial = window.currentUser ? window.currentUser.username.charAt(0).toUpperCase() : 'U';
-    const avatarHtml = (window.currentUser && window.currentUser.avatar_url) 
+    const avatarHtml = (window.currentUser && window.currentUser.avatar_url)
         ? `<img src="${window.currentUser.avatar_url}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`
         : userInitial;
 
@@ -166,9 +184,9 @@ function renderSidebar() {
 function toggleSidebar() {
     const sidebar = document.querySelector('nav.sidebar');
     if (!sidebar) return;
-    
+
     const isNowCollapsed = !sidebar.classList.contains('collapsed');
-    
+
     if (isNowCollapsed) {
         sidebar.classList.add('collapsed');
         localStorage.setItem('sidebar-collapsed', 'true');
@@ -176,7 +194,7 @@ function toggleSidebar() {
         sidebar.classList.remove('collapsed');
         localStorage.setItem('sidebar-collapsed', 'false');
     }
-    
+
     // Re-render to update toggle icon
     renderSidebar();
 }
@@ -216,7 +234,7 @@ function checkAuth() {
         }
 
         if (document.getElementById('welcomeUser')) {
-            document.getElementById('welcomeUser').innerText = data.username;
+            initDynamicGreeting();
         }
     }).catch(() => window.location.href = '/login');
 }
@@ -317,22 +335,38 @@ function logout() {
 
 /* --- DASHBOARD (HOME) --- */
 function initDashboard() {
+    initDynamicGreeting();
+    loadDashboardData();
+}
+
+function loadDashboardData() {
+    // Show skeletons in expense history
+    const list = document.getElementById('expenseHistoryList');
+    if (list) showSkeletons('expenseHistoryList', 'inline', 3);
+
     // Budget Summary for Widget
     fetch(API.budget).then(res => res.json()).then(data => {
-        document.getElementById('budgetSummary').innerText = `${data.remaining.toFixed(2)} RON`;
-        document.getElementById('dailyRec').innerText = `${data.dailyBudget} RON`;
+        const remainingEl = document.getElementById('budgetSummary');
+        const dailyRecEl = document.getElementById('dailyRec');
+        const bar = document.getElementById('budgetBar');
+        const spentEl = document.getElementById('spentLabel');
+        const daysEl = document.getElementById('daysLabel');
+
+        if (remainingEl) remainingEl.innerText = `${data.remaining.toFixed(2)} RON`;
+        if (dailyRecEl) dailyRecEl.innerText = `${data.dailyBudget} RON`;
 
         const percent = data.totalBudget > 0 ? ((data.totalExpenses / data.totalBudget) * 100) : 0;
         const width = Math.min(percent, 100);
-        const bar = document.getElementById('budgetBar');
-        bar.style.width = `${width}%`;
+        
+        if (bar) {
+            bar.style.width = `${width}%`;
+            if (width < 50) bar.style.backgroundColor = 'var(--success)';
+            else if (width < 80) bar.style.backgroundColor = 'var(--warning)';
+            else bar.style.backgroundColor = 'var(--danger)';
+        }
 
-        if (width < 50) bar.style.backgroundColor = 'var(--success)';
-        else if (width < 80) bar.style.backgroundColor = 'var(--warning)';
-        else bar.style.backgroundColor = 'var(--danger)';
-
-        document.getElementById('spentLabel').innerText = `Cheltuit: ${data.totalExpenses} RON (${width.toFixed(0)}%)`;
-        document.getElementById('daysLabel').innerText = `Zile rămase: ${data.daysLeft}`;
+        if (spentEl) spentEl.innerText = `Cheltuit: ${data.totalExpenses} RON (${width.toFixed(0)}%)`;
+        if (daysEl) daysEl.innerText = `Zile rămase: ${data.daysLeft}`;
     });
 
     // Habits Progress for Widget
@@ -374,10 +408,10 @@ function initDashboard() {
                     </div>`;
                 list.appendChild(div);
             });
-        } else {
+        } else if (list) {
             list.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: #94a3b8; font-style: italic;">Nicio activitate planificată recent. Relaxează-te! 🌴</div>';
         }
-    });
+    }).catch(err => console.error("Timeline load error:", err));
 }
 
 /* --- BUDGET PAGE --- */
@@ -412,11 +446,11 @@ function loadFinancialData() {
 
                 const labels = Object.keys(catMap);
                 const values = Object.values(catMap);
-                
+
                 const colors = labels.map((name, i) => {
                     // Try to find if user set a specific color for this category
                     // (Actually needs a fetch for categories too, but let's stick to generating unless we have it)
-                    const hue = 220 + (i * 45); 
+                    const hue = 220 + (i * 45);
                     return `hsl(${hue % 360}, 65%, 60%)`;
                 });
 
@@ -547,7 +581,7 @@ function loadCategories() {
                 .then(expenses => {
                     list.innerHTML = '';
                     if (categories.length === 0) list.innerHTML = '<div style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">Nicio limită setată.</div>';
-                    
+
                     categories.forEach(c => {
                         const spent = expenses.filter(e => e.category === c.name).reduce((sum, e) => sum + e.amount, 0);
                         const percent = c.monthly_limit > 0 ? (spent / c.monthly_limit) * 100 : 0;
@@ -608,14 +642,14 @@ function saveExpense() {
     const desc = document.getElementById('expenseDesc').value;
     const category = document.getElementById('expenseCategory').value;
     if (!amount) return showToast('Suma este obligatorie!', 'warning');
-    
-    fetch(API.expenses, { 
-        method: 'POST', 
-        body: JSON.stringify({ amount, description: desc, category }), 
-        headers: { 'Content-Type': 'application/json' } 
-    }).then(() => { 
-        closeModal('expenseModal'); 
-        loadFinancialData(); 
+
+    fetch(API.expenses, {
+        method: 'POST',
+        body: JSON.stringify({ amount, description: desc, category }),
+        headers: { 'Content-Type': 'application/json' }
+    }).then(() => {
+        closeModal('expenseModal');
+        loadFinancialData();
         loadCategories(); // Refresh bars
     });
 }
@@ -833,7 +867,7 @@ function closeModal(id = 'actModal') { document.getElementById(id).style.display
 
 function initGlobalModals() {
     if (document.getElementById('confirmModal')) return;
-    
+
     const div = document.createElement('div');
     div.id = 'confirmModal';
     div.className = 'modal';
@@ -857,26 +891,26 @@ function showConfirm(title, message, callback) {
         if (confirm(message)) callback();
         return;
     }
-    
+
     // Set title and message
     const titleEl = modal.querySelector('h3');
     const msgEl = document.getElementById('confirmMessage');
     if (titleEl) titleEl.innerText = title;
     if (msgEl) msgEl.innerText = message;
-    
+
     // Update confirm button
     const btn = document.getElementById('confirmBtn');
     if (btn) {
         // Remove old listeners by cloning
         const newBtn = btn.cloneNode(true);
         btn.parentNode.replaceChild(newBtn, btn);
-        
+
         newBtn.onclick = () => {
             callback();
             closeModal('confirmModal');
         };
     }
-    
+
     openModal('confirmModal');
 }
 /* --- HABIT TRACKER --- */
@@ -885,6 +919,7 @@ function initHabits() {
 }
 
 function loadHabits() {
+    showSkeletons('habitsList', 'card', 2);
     fetch(API.habits)
         .then(res => res.json())
         .then(habits => {
@@ -906,9 +941,9 @@ function loadHabits() {
                         <div>
                             <h4 style="margin: 0; font-size: 1.1rem;">${h.title}</h4>
                             <div style="margin-top: 0.4rem; font-size: 0.8rem;">
-                                ${h.streak > 2 ? `<span style="color: #fb923c; font-weight: 700;">🔥 ${h.streak} Zile la rând!</span>` : 
-                                  h.streak > 0 ? `<span style="color: var(--primary); font-weight: 600;">🔥 Streak: ${h.streak}</span>` : 
-                                  '<span style="color: #94a3b8; font-style: italic;">Începe astăzi!</span>'}
+                                ${h.streak > 2 ? `<span style="color: #fb923c; font-weight: 700;">🔥 ${h.streak} Zile la rând!</span>` :
+                        h.streak > 0 ? `<span style="color: var(--primary); font-weight: 600;">🔥 Streak: ${h.streak}</span>` :
+                            '<span style="color: #94a3b8; font-style: italic;">Începe astăzi!</span>'}
                             </div>
                         </div>
                         <button onclick="deleteHabit(${h.id})" class="btn-delete-act" style="padding: 2px 6px; font-size: 1.1rem;">×</button>
@@ -936,7 +971,10 @@ function toggleHabit(id) {
         .then(data => {
             if (data.success) {
                 loadHabits();
-                if (data.completed) showToast("Excelent! Continuă tot așa! 🔥", "success");
+                if (data.completed) {
+                    showToast("Excelent! Continuă tot așa! 🔥", "success");
+                    fireConfetti();
+                }
                 else showToast("Am de-bifat obiceiul.", "info");
             }
         });
@@ -977,46 +1015,62 @@ function deleteHabit(id) {
 /* --- NOTES / JOURNAL --- */
 function initNotes() {
     loadNotes();
+    initNoteDrafts();
 }
 
 function loadNotes() {
+    showSkeletons('notesList', 'card', 4);
     fetch(API.notes)
         .then(res => res.json())
         .then(notes => {
-            const list = document.getElementById('notesList');
-            if (!list) return;
-            list.innerHTML = '';
-
-            if (notes.length === 0) {
-                list.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 3rem; font-style: italic;">Nicio notă încă. Scrie ceva acum! 📝</div>';
-                return;
-            }
-
-            notes.forEach(n => {
-                const card = document.createElement('div');
-                card.className = 'note-card';
-                card.style.background = n.color || 'rgba(255, 255, 255, 0.05)';
-                const isColored = n.color && n.color !== '#ffffff';
-                if (isColored) {
-                    card.style.color = '#1e293b'; 
-                }
-                
-                const deleteBtnColor = isColored ? '#1e293b' : '#ef4444';
-
-                card.innerHTML = `
-                    <div class="note-header">
-                        <strong style="font-size: 1.1rem;">${n.title || 'Fără titlu'}</strong>
-                        <button onclick="deleteNote(${n.id})" 
-                                style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: ${deleteBtnColor}; opacity: 0.7;">×</button>
-                    </div>
-                    <div class="note-content" style="${isColored ? 'color: #1e293b;' : ''}">${n.content}</div>
-                    <div class="note-date" style="${isColored ? 'border-top-color: rgba(0,0,0,0.1); color: rgba(0,0,0,0.5);' : ''}">
-                        ${new Date(n.created_at).toLocaleString('ro-RO')}
-                    </div>
-                `;
-                list.appendChild(card);
-            });
+            window._allNotes = notes;
+            renderNotesList(notes);
         });
+}
+
+function renderNotesList(notes) {
+    const list = document.getElementById('notesList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (notes.length === 0) {
+        list.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 3rem; font-style: italic;">Nicio notă găsită. 📝</div>';
+        return;
+    }
+
+    notes.forEach(n => {
+        const card = document.createElement('div');
+        card.className = 'note-card';
+        card.style.background = n.color || 'rgba(255, 255, 255, 0.05)';
+        const isColored = n.color && n.color !== '#ffffff';
+        if (isColored) card.style.color = '#1e293b';
+
+        const deleteBtnColor = isColored ? '#1e293b' : '#ef4444';
+
+        card.innerHTML = `
+            <div class="note-header">
+                <strong style="font-size: 1.1rem;">${n.title || 'Fără titlu'}</strong>
+                <button onclick="deleteNote(${n.id})" 
+                        style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: ${deleteBtnColor}; opacity: 0.7;">×</button>
+            </div>
+            <div class="note-content" style="${isColored ? 'color: #1e293b;' : ''}">${n.content}</div>
+            <div class="note-date" style="${isColored ? 'border-top-color: rgba(0,0,0,0.1); color: rgba(0,0,0,0.5);' : ''}">
+                ${new Date(n.created_at).toLocaleString('ro-RO')}
+            </div>
+        `;
+        list.appendChild(card);
+    });
+}
+
+function filterNotes() {
+    const searchEl = document.getElementById('noteSearch');
+    if (!searchEl || !window._allNotes) return;
+    const query = searchEl.value.toLowerCase();
+    const filtered = window._allNotes.filter(n => 
+        (n.title && n.title.toLowerCase().includes(query)) || 
+        (n.content && n.content.toLowerCase().includes(query))
+    );
+    renderNotesList(filtered);
 }
 
 function setNoteColor(color, el) {
@@ -1045,6 +1099,7 @@ function saveNote() {
             showToast("Notă salvată!", "success");
             document.getElementById('noteTitle').value = '';
             document.getElementById('noteContent').value = '';
+            localStorage.removeItem('note_draft'); // Clear draft
             document.getElementById('noteColor').value = '#ffffff';
             // Reset active color class to white
             document.querySelectorAll('.color-picker').forEach(btn => btn.classList.remove('active'));
@@ -1098,7 +1153,7 @@ function initWeatherDashboard() {
             .then(data => {
                 const current = data.current_weather;
                 const weather = WEATHER_CODES[current.weathercode] || { emoji: '🌡️', text: 'Vreme' };
-                
+
                 const iconEl = document.getElementById('weatherIcon');
                 const tempEl = document.getElementById('weatherTemp');
                 const descEl = document.getElementById('weatherDesc');
@@ -1194,7 +1249,7 @@ function manualSearch() {
     if (!input) return;
     const query = input.value;
     if (!query) return showToast("Introdu numele orașului!", "warning");
-    
+
     fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`)
         .then(res => res.json())
         .then(results => {
@@ -1325,7 +1380,7 @@ function initSavingsWidget() {
         .then(goals => {
             const summaryEl = document.getElementById('savingsSummary');
             if (!summaryEl) return;
-            
+
             if (goals.length === 0) {
                 summaryEl.innerHTML = '<div style="color: #94a3b8; font-size: 0.85rem; padding: 1rem 0; font-style: italic;">Niciun obiectiv activ.</div>';
                 return;
@@ -1333,10 +1388,10 @@ function initSavingsWidget() {
 
             // Sort by current amount descending
             const sortedGoals = [...goals].sort((a, b) => b.current_amount - a.current_amount);
-            
+
             // Take top 2
             const topTwo = sortedGoals.slice(0, 2);
-            
+
             summaryEl.innerHTML = topTwo.map((goal, idx) => {
                 const percent = Math.min((goal.current_amount / goal.target_amount) * 100, 100);
                 return `
@@ -1362,7 +1417,7 @@ function initSavingsWidget() {
 let pomoInterval;
 let pomoSeconds = 25 * 60;
 let pomoRunning = false;
-let pomoMode = 'work'; 
+let pomoMode = 'work';
 
 function startPomodoro() {
     if (pomoRunning) return;
@@ -1375,7 +1430,7 @@ function startPomodoro() {
         const sec = pomoSeconds % 60;
         const el = document.getElementById('pomodoroTimer');
         if (el) el.innerText = `${min}:${sec.toString().padStart(2, '0')}`;
-        
+
         if (pomoSeconds <= 0) {
             clearInterval(pomoInterval);
             pomoRunning = false;
@@ -1423,14 +1478,14 @@ function loadHydration() {
             const total = data.total;
             const target = 2000;
             const percent = Math.min((total / target) * 100, 100);
-            
+
             const totalEl = document.getElementById('waterTotal');
             const bar = document.getElementById('waterBar');
             const wave = document.getElementById('waterWave');
 
             if (totalEl) totalEl.innerText = `${total} / ${target} ml`;
             if (bar) bar.style.width = `${percent}%`;
-            
+
             if (wave) {
                 if (percent >= 100) wave.innerText = '🌊';
                 else if (percent >= 50) wave.innerText = '💧';
@@ -1463,7 +1518,7 @@ function loadAnalytics() {
         .then(data => {
             const totalEl = document.getElementById('totalSaved');
             if (totalEl) totalEl.innerText = `${data.savingsTotal.toFixed(2)} RON`;
-            
+
             Chart.defaults.color = '#94a3b8';
             Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
 
@@ -1531,7 +1586,7 @@ function loadAnalytics() {
                     }
                 });
             }
-            
+
             const rateEl = document.getElementById('habitRate');
             if (rateEl && data.dailyHabits.length > 0) {
                 const totalCompleted = data.dailyHabits.reduce((acc, curr) => acc + curr.completed, 0);
@@ -1547,51 +1602,70 @@ function initTasks() {
 }
 
 function loadTasks() {
+    showSkeletons('container-todo', 'task', 1);
+    showSkeletons('container-in-progress', 'task', 1);
+    showSkeletons('container-done', 'task', 1);
+    
     fetch('/api/tasks')
         .then(res => res.json())
         .then(tasks => {
-            const containers = {
-                todo: document.getElementById('container-todo'),
-                'in-progress': document.getElementById('container-in-progress'),
-                done: document.getElementById('container-done')
-            };
-
-            const counts = { todo: 0, 'in-progress': 0, done: 0 };
-            Object.values(containers).forEach(c => { if(c) c.innerHTML = ''; });
-
-            tasks.forEach(t => {
-                const card = document.createElement('div');
-                card.id = `task-${t.id}`;
-                card.className = 'task-card';
-                card.draggable = true;
-                
-                // Add drag listener manually since it's injected
-                card.ondragstart = (ev) => {
-                    ev.dataTransfer.setData("text", ev.target.id);
-                    ev.target.classList.add('dragging');
-                };
-                card.ondragend = (ev) => ev.target.classList.remove('dragging');
-
-                counts[t.status]++;
-                
-                card.innerHTML = `
-                    <div class="priority-badge priority-${t.priority}">${t.priority}</div>
-                    <div style="font-weight: 600; margin-bottom: 0.25rem;">${t.title}</div>
-                    <div style="font-size: 0.8rem; color: #94a3b8;">${t.description || ''}</div>
-                    <div class="task-actions">
-                        <button onclick="deleteTask(${t.id})" class="btn-delete" title="Șterge">🗑️</button>
-                    </div>
-                `;
-
-                if (containers[t.status]) containers[t.status].appendChild(card);
-            });
-
-            // Update counts
-            Object.keys(counts).forEach(s => {
-                const el = document.getElementById(`count-${s}`);
-                if (el) el.innerText = counts[s];
-            });
+            window._allTasks = tasks;
+            renderTasksList(tasks);
         });
+}
+
+function renderTasksList(tasks) {
+    const containers = {
+        todo: document.getElementById('container-todo'),
+        'in-progress': document.getElementById('container-in-progress'),
+        done: document.getElementById('container-done')
+    };
+
+    if (!containers.todo) return; // Exit if not on tasks page
+
+    const counts = { todo: 0, 'in-progress': 0, done: 0 };
+    Object.values(containers).forEach(c => { if (c) c.innerHTML = ''; });
+
+    tasks.forEach(t => {
+        const card = document.createElement('div');
+        card.id = `task-${t.id}`;
+        card.className = 'task-card';
+        card.draggable = true;
+
+        card.ondragstart = (ev) => {
+            ev.dataTransfer.setData("text", ev.target.id);
+            ev.target.classList.add('dragging');
+        };
+        card.ondragend = (ev) => ev.target.classList.remove('dragging');
+
+        counts[t.status]++;
+
+        card.innerHTML = `
+            <div class="priority-badge priority-${t.priority}">${t.priority}</div>
+            <div style="font-weight: 600; margin-bottom: 0.25rem;">${t.title}</div>
+            <div style="font-size: 0.8rem; color: #94a3b8;">${t.description || ''}</div>
+            <div class="task-actions">
+                <button onclick="deleteTask(${t.id})" class="btn-delete" title="Șterge">🗑️</button>
+            </div>
+        `;
+
+        if (containers[t.status]) containers[t.status].appendChild(card);
+    });
+
+    Object.keys(counts).forEach(s => {
+        const el = document.getElementById(`count-${s}`);
+        if (el) el.innerText = counts[s];
+    });
+}
+
+function filterTasks() {
+    const query = document.getElementById('taskSearch').value.toLowerCase();
+    if (!window._allTasks) return;
+    const filtered = window._allTasks.filter(t => 
+        t.title.toLowerCase().includes(query) || 
+        (t.description && t.description.toLowerCase().includes(query))
+    );
+    renderTasksList(filtered);
 }
 
 function saveTask() {
@@ -1621,9 +1695,9 @@ function updateTaskStatus(id, status) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
-    }).then(() => {
-        // Find counts
-        loadTasks(); // Robust reload
+    }).then(res => res.json()).then(data => {
+        if (status === 'done') fireConfetti();
+        loadTasks();
     });
 }
 
@@ -1644,14 +1718,15 @@ function initTasksWidget() {
     const container = document.getElementById('tasksDashboard');
     if (!container) return;
 
+    showSkeletons('tasksDashboard', 'inline', 2);
     fetch('/api/tasks')
         .then(res => res.json())
         .then(tasks => {
             container.innerHTML = '';
-            
+
             // Filter: only show 'todo' or 'in-progress'
             const activeTasks = tasks.filter(t => t.status !== 'done').slice(0, 2);
-            
+
             if (activeTasks.length === 0) {
                 container.innerHTML = `
                     <div style="grid-column: 1/-1; padding: 1rem; text-align: center; color: #94a3b8; font-style: italic;">
@@ -1664,7 +1739,7 @@ function initTasksWidget() {
             activeTasks.forEach(t => {
                 const card = document.createElement('div');
                 card.style.cssText = 'background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between;';
-                
+
                 const priorityColors = { high: '#ef4444', medium: '#f59e0b', low: '#10b981' };
                 const dotColor = priorityColors[t.priority] || '#94a3b8';
 
@@ -1692,4 +1767,200 @@ function initTasksWidget() {
 function initDateDisplay() {
     const el = document.getElementById('dateDisplay');
     if (el) el.innerText = new Date().toLocaleDateString('ro-RO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+/* --- QUALITY OF LIFE --- */
+function loadConfetti(callback) {
+    if (window.confetti) return callback();
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
+    script.onload = callback;
+    document.head.appendChild(script);
+}
+
+function fireConfetti() {
+    loadConfetti(() => {
+        window.confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#6366f1', '#10b981', '#f59e0b']
+        });
+    });
+}
+
+function initDynamicGreeting() {
+    const el = document.getElementById('mainGreeting');
+    if (!el || !window.currentUser) return;
+    
+    const hour = new Date().getHours();
+    let greeting = "Bună dimineața";
+    if (hour >= 12 && hour < 18) greeting = "Bună ziua";
+    else if (hour >= 18 && hour < 22) greeting = "Bună seara";
+    else if (hour >= 22 || hour < 5) greeting = "Noapte bună";
+
+    el.innerHTML = `${greeting}, <span id="welcomeUser" style="color: var(--primary); font-weight: 700;">${window.currentUser.username}</span>! 👋`;
+}
+
+/* --- KEYBOARD SHORTCUTS --- */
+window.addEventListener('keydown', (e) => {
+    // Alt + N -> New Note
+    if (e.altKey && e.key.toLowerCase() === 'n') {
+        const modal = document.getElementById('noteModal');
+        if (modal) {
+            e.preventDefault();
+            openModal('noteModal');
+        }
+    }
+    // Alt + T -> New Task
+    if (e.altKey && e.key.toLowerCase() === 't') {
+        const modal = document.getElementById('taskModal');
+        if (modal) {
+            e.preventDefault();
+            openModal('taskModal');
+        }
+    }
+    // Alt + F -> Focus Search
+    if (e.altKey && e.key.toLowerCase() === 'f') {
+        const searchInput = document.getElementById('noteSearch') || document.getElementById('taskSearch') || document.getElementById('citySearch');
+        if (searchInput) {
+            e.preventDefault();
+            searchInput.focus();
+        }
+    }
+    // Escape -> Close Modals
+    if (e.key === 'Escape') {
+        const modal = document.querySelector('.modal.open') || document.querySelector('.modal[style*="display: block"]');
+        if (modal) closeModal(modal.id);
+    }
+});
+
+function initNoteDrafts() {
+    const title = document.getElementById('noteTitle');
+    const content = document.getElementById('noteContent');
+    if (!title || !content) return;
+
+    // Restore draft
+    const draft = JSON.parse(localStorage.getItem('note_draft') || '{}');
+    if (draft.title) title.value = draft.title;
+    if (draft.content) content.value = draft.content;
+
+    const saveDraft = () => {
+        localStorage.setItem('note_draft', JSON.stringify({
+            title: title.value,
+            content: content.value
+        }));
+    };
+
+    title.addEventListener('input', saveDraft);
+    content.addEventListener('input', saveDraft);
+}
+
+/* --- DATA EXPORT --- */
+async function exportData(format) {
+    showToast("Pregătim fișierul de export...", "info");
+    
+    try {
+        const [notes, tasks, expenses, habits] = await Promise.all([
+            fetch('/api/notes').then(r => r.json()),
+            fetch('/api/tasks').then(r => r.json()),
+            fetch('/api/expenses').then(r => r.json()),
+            fetch('/api/habits').then(r => r.json())
+        ]);
+
+        const data = { notes, tasks, expenses, habits, exportDate: new Date().toISOString() };
+
+        if (format === 'json') {
+            downloadFile(JSON.stringify(data, null, 2), `LifeOS_Export_${new Date().toLocaleDateString('ro-RO')}.json`, 'application/json');
+        } else {
+            // For CSV we focus on Expenses as it's most useful
+            let csv = "ID,Data,Descriere,Suma,Categorie\n";
+            expenses.forEach(e => {
+                csv += `${e.id},${new Date(e.created_at).toLocaleDateString()},"${e.description}",${e.amount},${e.category || 'General'}\n`;
+            });
+            downloadFile(csv, `Finante_LifeOS_${new Date().toLocaleDateString('ro-RO')}.csv`, 'text/csv');
+        }
+        showToast("Export finalizat cu succes!", "success");
+    } catch (err) {
+        console.error(err);
+        showToast("Eroare la exportul datelor.", "error");
+    }
+}
+
+function downloadFile(content, fileName, contentType) {
+    const a = document.createElement("a");
+    const file = new Blob([content], { type: contentType });
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+}
+
+/* --- THEME PERSONALIZATION --- */
+function setThemeColor(color) {
+    localStorage.setItem('theme_color', color);
+    applyTheme();
+    showToast("Culoarea de accent a fost actualizată!", "success");
+}
+
+function setThemeMode(mode) {
+    localStorage.setItem('theme_mode', mode);
+    applyTheme();
+}
+
+function applyTheme() {
+    const color = localStorage.getItem('theme_color') || '#6366f1';
+    const mode = localStorage.getItem('theme_mode') || 'dark';
+    
+    document.documentElement.style.setProperty('--primary', color);
+    const darkColor = adjustColor(color, -30);
+    document.documentElement.style.setProperty('--primary-dark', darkColor);
+
+    if (mode === 'light') {
+        document.body.classList.add('light-mode');
+        // Update Root variables for Light Mode
+        document.documentElement.style.setProperty('--bg', '#f1f5f9');
+        document.documentElement.style.setProperty('--card', '#ffffff');
+        document.documentElement.style.setProperty('--text', '#1e293b');
+        document.documentElement.style.setProperty('--text-muted', '#64748b');
+    } else {
+        document.body.classList.remove('light-mode');
+        // Reset to Dark Mode defaults
+        document.documentElement.style.setProperty('--bg', '#0f172a');
+        document.documentElement.style.setProperty('--card', '#1e293b');
+        document.documentElement.style.setProperty('--text', '#f8fafc');
+        document.documentElement.style.setProperty('--text-muted', '#94a3b8');
+    }
+
+    // Update button states in Settings if they exist
+    const btnDark = document.getElementById('btnDarkMode');
+    const btnLight = document.getElementById('btnLightMode');
+    if (btnDark && btnLight) {
+        if (mode === 'dark') {
+            btnDark.style.background = 'var(--primary)';
+            btnDark.style.color = 'white';
+            btnLight.style.background = 'transparent';
+            btnLight.style.color = 'var(--text-muted)';
+        } else {
+            btnLight.style.background = 'var(--primary)';
+            btnLight.style.color = 'white';
+            btnDark.style.background = 'transparent';
+            btnDark.style.color = 'var(--text-muted)';
+        }
+    }
+}
+
+function adjustColor(hex, amt) {
+    let usePound = false;
+    if (hex[0] === "#") {
+        hex = hex.slice(1);
+        usePound = true;
+    }
+    const num = parseInt(hex, 16);
+    let r = (num >> 16) + amt;
+    if (r > 255) r = 255; else if (r < 0) r = 0;
+    let b = ((num >> 8) & 0x00FF) + amt;
+    if (b > 255) b = 255; else if (b < 0) b = 0;
+    let g = (num & 0x0000FF) + amt;
+    if (g > 255) g = 255; else if (g < 0) g = 0;
+    return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16).padStart(6, '0');
 }

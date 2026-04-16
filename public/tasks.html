@@ -17,20 +17,47 @@
         }
 
         .kanban-column {
-            background: rgba(15, 23, 42, 0.4);
-            border-radius: 1.25rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 1.5rem;
             padding: 1.25rem;
-            min-height: 500px;
+            min-height: 600px;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            transition: all 0.3s ease;
+            gap: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+        }
+
+        body.light-mode .kanban-column {
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .kanban-column:hover {
             border-color: rgba(99, 102, 241, 0.2);
-            background: rgba(15, 23, 42, 0.5);
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        body.light-mode .kanban-column:hover {
+            background: rgba(0, 0, 0, 0.04);
+        }
+
+        .task-card {
+            background: var(--card);
+            border-radius: 1.25rem;
+            padding: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            cursor: grab;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+            position: relative;
+            color: var(--text);
+        }
+
+        body.light-mode .task-card {
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
         }
 
         .column-header {
@@ -59,15 +86,8 @@
             color: var(--text-muted);
         }
 
-        .task-card {
-            background: var(--card);
-            border-radius: 1rem;
-            padding: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            cursor: grab;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
-            position: relative;
+        body.light-mode .task-count {
+            background: rgba(0, 0, 0, 0.05);
         }
 
         .task-card:active { cursor: grabbing; }
@@ -142,6 +162,15 @@
             </div>
             <button onclick="openModal('taskModal')" class="btn-primary">➕ Task Nou</button>
         </header>
+
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem;">
+            <div style="flex: 1; position: relative;">
+                <input type="text" id="taskSearch" placeholder="Caută task..." 
+                    oninput="filterTasks()"
+                    style="width: 100%; padding: 0.8rem 1rem 0.8rem 2.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; outline: none; transition: border-color 0.2s;">
+                <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.1rem; opacity: 0.5;">🔍</span>
+            </div>
+        </div>
 
         <div class="kanban-board">
             <!-- To Do -->

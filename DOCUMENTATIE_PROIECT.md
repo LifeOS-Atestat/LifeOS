@@ -20,6 +20,8 @@ Proiectul a fost realizat ca lucrare de atestat, având ca scop demonstrarea com
 *   **JavaScript (Vanilla)**: Logica de pe partea de client pentru interacțiunea cu utilizatorul și apelarea API-urilor (fetch).
 *   **Biblioteci Externe**:
     *   *Flatpickr*: Pentru selectarea modernă a datei și orei.
+    *   *Chart.js*: Pentru vizualizarea grafică a datelor financiare.
+    *   *Canvas-Confetti*: Pentru efecte vizuale de celebrare.
     *   *Google Fonts (Inter)*: Pentru tipografie.
 
 ## 3. Funcționalități Principale
@@ -45,6 +47,8 @@ Pagina principală oferă o privire de ansamblu rapidă:
 ### 📋 Modul Productivitate (Kanban & Obiceiuri)
 *   **Kanban Board**: Sistem de gestionare a proiectelor prin coloane ("De făcut", "În lucru", "Finalizat") cu funcționalitate intuitivă de Drag-and-Drop.
 *   **Prioritizarea Task-urilor**: Posibilitatea de a seta niveluri de prioritate (Scăzut, Normal, Urgent) pentru fiecare sarcină.
+*   **Filtrare și Căutare**: Bare de căutare instantanee integrate în paginile de Note și Kanban pentru localizarea rapidă a informațiilor.
+*   **Notes (Note Rapide)**: Modul dedicat pentru notițe cu prioritizare pe culori, sistem de auto-salvare draft (în caz de închidere accidentală) și filtrare dinamică.
 *   **Habit Tracker**: Monitorizarea succesivității obiceiurilor zilnice. Sistemul calculează automat **Streak-ul** (zile consecutive de succes) pentru a încuraja disciplina utilizatorului.
 *   **Widget-uri Interactive**: Vizualizarea rapidă a sarcinilor active și a progresului obiceiurilor direct pe Dashboard.
 
@@ -53,10 +57,15 @@ Pagina principală oferă o privire de ansamblu rapidă:
 *   **Finalizarea Activităților**: Buton "Terminat (✓)" care marchează vizual sarcina și o păstrează în istoric timp de o oră înainte de eliminarea automată.
 *   **Indicatori de Timp**: Afișarea timpului rămăs până la următoarea activitate (ex: "În 1h 20min") și a numărului de zile până la evenimentele viitoare.
 
-### ⚙️ Setări și Personalizare
+### ⚙️ Setări și Personalizare (Power User)
+*   **Tema Duală**: Comutare între **Light Mode** și **Dark Mode** cu persistență (salvare preferință în browser).
+*   **Accent Color Picker**: Posibilitatea de a alege o nuanță principală pentru interfață, afectând butoanele, bordurile și gradienții de fundal.
+*   **Scurtături de Tastatură**: Sistem de "Power User" pentru navigare rapidă: `Alt+N` (Note), `Alt+T` (Task), `Alt+F` (Focus Search).
+*   **Export Date**: Funcții de back-up și export:
+    *   **JSON**: Export complet al datelor utilizatorului.
+    *   **CSV**: Export al istoricului financiar compatibil cu Excel.
 *   **Avatar Personalizat**: Încărcare de poze de profil direct din interfață.
-*   **Design Unic**: Interfață cu tematică întunecată (Dark Mode) și efecte de Glassmorphism, optimizată pentru experiența utilizatorului.
-*   **Confirmări Globale**: Sistem integrat de mesaje de confirmare (modale) personalizate, înlocuind ferestrele standard de sistem pentru o coerență vizuală sporită.
+*   **Fidelitate Vizuală**: Implementare de **Skeleton Loaders** pentru o experiență de încărcare fluidă și animații de succes.
 
 ## 4. Arhitectura Aplicației
 Aplicația este structurată pe modelul **Client-Server**:

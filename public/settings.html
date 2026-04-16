@@ -28,7 +28,7 @@
                 </div>
                 <div>
                     <h3 style="margin-bottom: 0.25rem;">Poză de Profil</h3>
-                    <p style="color: #94a3b8; font-size: 0.9rem;">Încarcă o imagine (JPG, PNG) de maxim 5MB.</p>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Încarcă o imagine (JPG, PNG) de maxim 5MB.</p>
                 </div>
             </div>
 
@@ -44,10 +44,55 @@
             <div id="uploadStatus" style="margin-top: 1rem; font-size: 0.9rem;"></div>
         </div>
 
-        <div class="card" style="text-align: center; padding: 2rem; margin-top: 2rem; opacity: 0.7;">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🚧</div>
-            <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">Alte Setări</h3>
-            <p style="color: #94a3b8;">Mai multe opțiuni vor apărea aici în curând.</p>
+        <div class="card" style="max-width: 600px; margin: 2rem auto 0 auto;">
+            <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">🎨 Aspect și Temă</h3>
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <!-- Mode Toggle -->
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--sidebar-border);">
+                    <div>
+                        <b style="display: block; font-size: 0.95rem;">Mod Interfață</b>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Schimbă între Dark și Light Mode.</span>
+                    </div>
+                    <div style="display: flex; background: rgba(0,0,0,0.05); padding: 4px; border-radius: 10px; gap: 4px;">
+                        <button id="btnDarkMode" onclick="setThemeMode('dark')" class="btn-secondary" style="padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; border: none; cursor: pointer;">🌙 Dark</button>
+                        <button id="btnLightMode" onclick="setThemeMode('light')" class="btn-secondary" style="padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; border: none; cursor: pointer;">☀️ Light</button>
+                    </div>
+                </div>
+
+                <!-- Accent Color -->
+                <div>
+                    <b style="display: block; font-size: 0.95rem; margin-bottom: 0.75rem;">Culoare Accent</b>
+                    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                        <div onclick="setThemeColor('#6366f1')" style="background: #6366f1; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"></div>
+                        <div onclick="setThemeColor('#10b981')" style="background: #10b981; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"></div>
+                        <div onclick="setThemeColor('#f59e0b')" style="background: #f59e0b; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"></div>
+                        <div onclick="setThemeColor('#ef4444')" style="background: #ef4444; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"></div>
+                        <div onclick="setThemeColor('#ec4899')" style="background: #ec4899; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"></div>
+                        <div onclick="setThemeColor('#8b5cf6')" style="background: #8b5cf6; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"></div>
+                        
+                        <div style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Custom:</span>
+                            <input type="color" onchange="setThemeColor(this.value)" style="background: none; border: none; width: 38px; height: 38px; cursor: pointer; padding: 0;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="max-width: 600px; margin: 2rem auto 0 auto;">
+            <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">💾 Gestionare Date</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Exportă datele tale pentru a le păstra în siguranță sau pentru a le analiza în Excel (CSV).</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <button onclick="exportData('json')" class="btn-secondary" style="padding: 1rem; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; height: auto;">
+                    <span style="font-size: 1.5rem;">📄</span>
+                    <span>Export JSON</span>
+                </button>
+                <button onclick="exportData('csv')" class="btn-secondary" style="padding: 1rem; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; height: auto;">
+                    <span style="font-size: 1.5rem;">📊</span>
+                    <span>Export CSV (Excel)</span>
+                </button>
+            </div>
         </div>
     </main>
     <script src="/app.js"></script>

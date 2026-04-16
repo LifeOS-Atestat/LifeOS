@@ -24,7 +24,10 @@ Acesta este fișierul principal care configurează serverul web Express.
         *   `PATCH /api/tasks/:id/status`: Mută un task între coloane (todo, in-progress, done).
         *   `DELETE /api/tasks/:id`: Ștergere securizată pe baza ID-ului de utilizator.
     *   **Time**:
-        *   `GET /api/next-activity`: Filtrează și sortează activitățile pentru a găsi următoarele 3 evenimente din viitor, calculând timpul rămas în minute.
+        *   `GET /api/next-activity`: Filtrează și sortează activitățile pentru a găsi următoarele 3 evenimente din viitor.
+    *   **Export & Management**:
+        *   `GET /api/export/json`: Agreghează toate datele specifice utilizatorului pentru un backup complet.
+        *   `GET /api/export/expenses/csv`: Generează un șir CSV descărcabil pentru rapoarte financiare.
 
 ### 2. `database.js` (Baza de Date)
 Gestionează interacțiunea directă cu fișierul SQLite `database.db`.
@@ -52,14 +55,13 @@ Acest fișier conține "creierul" interfeței. Este modularizat pe funcționalit
 *   **Configurație Globală**: Obiectul `API` centralizează rutele către server.
 *   **Router Client-Side**:
     *   La încărcarea paginii (`DOMContentLoaded`), scriptul detectează pe ce pagină se află verificând existența anumitor elemente HTML (ex: dacă există `loginForm`, inițializează logica de login).
-*   **Funcții Principale**:
-    *   `checkAuth()`: Verifică dacă utilizatorul e logat apelând `/api/me`. Dacă nu, redirectează la login.
-    *   `initDashboard()`:
-        *   Apelează `/api/budget` pentru a popula widget-ul financiar și bara de progres.
-        *   Apelează `/api/next-activity` pentru a genera lista cu timeline-ul.
-    *   `initTasks()`: Configurează interacțiunea Drag-and-Drop între coloanele Kanban și salvează starea în DB.
-    *   `getStreak()`: Algoritm ce analizează istoricul log-urilor pentru a determina consecvența fără întreruperi.
-    *   `showConfirm()`: Manager de interacțiune asincronă care afișează confirmări modale personlizate.
+*   **Funcții de Optimizare UX & QoL**:
+    *   `applyTheme()`: Funcție globală apelată la inițializare care injectează preferințele de stil (Dark/Light și Accent Color) prin variabile CSS (`--primary`, `--bg`, etc.).
+    *   `initSearch()`: Implementează filtrarea de înaltă performanță pe partea de client. Stochează datele inițiale într-un cache global (`window._allNotes` / `window._allTasks`) și re-randează listele instantaneu la tastare.
+    *   `initShortcuts()`: Event listener global pe `window` care ascultă combinațiile de taste (`Alt+Hotkeys`) și declanșează acțiuni asincrone.
+    *   `saveDraft()`: Salvare automată temporară în `localStorage` pentru a asigura persistența textului în modale în caz de închidere accidentală.
+    *   `celebrate()`: Integrare cu `canvas-confetti` pentru feedback vizual la succesul acțiunilor.
+    *   `showSkeletons()`: Manager de placeholders animați pentru îmbunătățirea timpului de încărcare perceput (Perceived Performance).
 
 ### 3. Securitate & Validare
 *   Validarea formularelor se face atât în HTML (`required`, `type="email"`) cât și în JavaScript înainte de trimitere.

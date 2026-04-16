@@ -16,15 +16,20 @@
             align-items: start;
         }
         .note-card {
-            background: rgba(255, 255, 255, 0.05); /* Default */
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             padding: 1.5rem;
             position: relative;
-            transition: transform 0.3s ease;
+            transition: var(--transition);
+        }
+        body.light-mode .note-card {
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
         }
         .note-card:hover {
             transform: translateY(-5px);
+            border-color: var(--primary);
         }
         .note-header {
             display: flex;
@@ -35,15 +40,19 @@
         .note-content {
             font-size: 0.95rem;
             line-height: 1.5;
-            color: #cbd5e1;
+            color: var(--text);
+            opacity: 0.9;
             white-space: pre-wrap;
         }
         .note-date {
             font-size: 0.75rem;
-            color: #64748b;
+            color: var(--text-muted);
             margin-top: 1.5rem;
             border-top: 1px solid rgba(255,255,255,0.05);
             padding-top: 0.75rem;
+        }
+        body.light-mode .note-date {
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
         }
         .color-picker {
             transition: transform 0.2s, box-shadow 0.2s;
@@ -71,6 +80,15 @@
             </div>
             <button onclick="openModal('noteModal')" class="btn-primary">➕ Notă Nouă</button>
         </header>
+
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+            <div style="flex: 1; position: relative;">
+                <input type="text" id="noteSearch" placeholder="Caută în note (titlu sau conținut)..." 
+                    oninput="filterNotes()"
+                    style="width: 100%; padding: 0.8rem 1rem 0.8rem 2.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; outline: none; transition: border-color 0.2s;">
+                <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.1rem; opacity: 0.5;">🔍</span>
+            </div>
+        </div>
 
         <section style="margin-top: 2rem;">
             <div id="notesList" class="notes-grid">

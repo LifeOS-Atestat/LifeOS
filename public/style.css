@@ -10,6 +10,14 @@
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.light-mode {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #0f172a;
+    --text-muted: #64748b;
 }
 
 body {
@@ -18,6 +26,24 @@ body {
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    overflow-x: hidden;
+}
+
+/* Dynamic glow background */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 90% 10%, var(--primary), transparent 40%),
+                radial-gradient(circle at 10% 90%, var(--primary), transparent 40%);
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: -1;
+    transition: var(--transition);
 }
 
 /* --- Auth Pages Specifics (Login/Register) --- */
@@ -44,8 +70,8 @@ body.app-page {
 
 /* Sidebar */
 .sidebar {
-    width: var(--sidebar-width); /* Default: Full */
-    background: #111827;
+    width: var(--sidebar-width);
+    background: var(--card); /* Match card theme */
     border-right: 1px solid rgba(255, 255, 255, 0.05);
     padding: 1.25rem 0.75rem;
     display: flex;
@@ -56,8 +82,13 @@ body.app-page {
     height: 100vh;
     box-sizing: border-box;
     z-index: 1000;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
     overflow: hidden;
+}
+
+body.light-mode .sidebar {
+    border-right: 1px solid rgba(0, 0, 0, 0.05);
+    background: #ffffff;
 }
 
 /* Collapsed State (Mini Mode) */
@@ -224,9 +255,22 @@ header h2 {
 /* --- Components --- */
 .card {
     background: var(--card);
-    border-radius: 1rem;
+    border-radius: 1.25rem;
     padding: 1.5rem;
     border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: var(--transition);
+}
+
+body.light-mode .card {
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(99, 102, 241, 0.2); /* Fallback */
+    border-color: var(--primary);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 .card h3 {
@@ -264,25 +308,40 @@ textarea {
     padding: 0.75rem;
     background: rgba(15, 23, 42, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 0.5rem;
-    color: white;
+    border-radius: 0.75rem;
+    color: var(--text);
     box-sizing: border-box;
     font-family: inherit;
+    transition: var(--transition);
+}
+
+body.light-mode input,
+body.light-mode select,
+body.light-mode textarea {
+    background: #f8fafc;
+    border: 1px solid rgba(0,0,0,0.1);
+    color: #1e293b;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 1rem;
 }
 
 select option {
-    background-color: #1e293b;
-    color: white;
+    background-color: var(--card);
+    color: var(--text);
 }
 
 input:focus,
@@ -335,12 +394,13 @@ button,
 }
 
 .btn-secondary {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: rgba(128, 128, 128, 0.08);
+    color: var(--text);
+    border: 1px solid rgba(128, 128, 128, 0.1);
 }
 
 .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(128, 128, 128, 0.15);
 }
 
 /* Fix for Auth Page Buttons Centering */
@@ -785,6 +845,40 @@ a:hover {
     background: var(--primary);
     color: white;
     border-color: var(--primary);
+}
+/* Skeleton Loaders */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.05) 25%,
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(255, 255, 255, 0.05) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-pulse 1.8s ease-in-out infinite;
+    border-radius: 12px;
+}
+
+@keyframes skeleton-pulse {
+    0% { background-position: 150% 0; }
+    100% { background-position: -150% 0; }
+}
+
+.skeleton-card {
+    height: 140px;
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.skeleton-inline {
+    height: 1.2rem;
+    display: inline-block;
+}
+
+.skeleton-circle {
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
 }
 
 .toast.success {
