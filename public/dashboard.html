@@ -21,21 +21,21 @@
 
         <div class="grid">
             <!-- Quick Actions -->
-            <div class="span-3" style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+            <div class="span-3" style="display: flex; gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap;">
                 <a href="/budget" class="btn-action btn-primary"
-                    style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; min-width: 140px; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                     <span>➕</span> Cheltuială
                 </a>
                 <a href="/schedule" class="btn-action btn-secondary"
-                    style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(255,255,255,0.05);">
+                    style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; min-width: 140px; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(255,255,255,0.05);">
                     <span>📅</span> Activitate
                 </a>
                 <a href="/notes" class="btn-action btn-secondary"
-                    style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(255,255,255,0.05);">
+                    style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; min-width: 140px; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(255,255,255,0.05);">
                     <span>📝</span> Notă
                 </a>
                 <a href="/tasks" class="btn-action btn-secondary"
-                    style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(99, 102, 241, 0.1); color: var(--primary);">
+                    style="padding: 0.8rem 1rem; border-radius: 12px; font-weight: 600; text-align: center; flex: 1; min-width: 140px; text-decoration: none; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(99, 102, 241, 0.1); color: var(--primary);">
                     <span>📋</span> Task Nou
                 </a>
             </div>
@@ -107,12 +107,12 @@
                     <a href="/budget" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">Detalii
                         &rarr;</a>
                 </h3>
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 1rem;">
-                    <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 1rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="min-width: 120px;">
                         <div style="font-size: 0.9rem; color: #94a3b8;">Buget Rămas</div>
                         <div class="value" id="budgetSummary" style="font-size: 2rem;">...</div>
                     </div>
-                    <div style="text-align: right;">
+                    <div style="text-align: right; min-width: 120px;">
                         <div style="font-size: 0.9rem; color: #94a3b8;">Zilnic Recom.</div>
                         <div class="value" id="dailyRec" style="font-size: 1.6rem; color: #10b981;">...</div>
                     </div>

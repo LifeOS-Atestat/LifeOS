@@ -93,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         checkAuth();
         initDateDisplay();
         renderSidebar(); // Shared Nav
+        renderMobileNav(); // Mobile-only Nav
         initGlobalModals(); // Shared Modals
         if (document.getElementById('col-todo')) initTasks();
     }
@@ -141,7 +142,7 @@ function renderSidebar() {
 
     let html = `
         <div class="logo">
-            <img src="/favicon.png" alt="LifeOS Logo" style="width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;">
+            <img src="/favicon.png" alt="LifeOS Logo" class="logo-icon">
             <span class="logo-text">LifeOS</span>
             <button class="sidebar-toggle" onclick="toggleSidebar()" style="margin-left: auto; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.2rem; transition: 0.2s;">
                 ${isCollapsed ? '➡' : '⬅'}
@@ -154,7 +155,7 @@ function renderSidebar() {
         html += `
             <a href="${item.href}" class="nav-item ${isActive}" title="${item.text}">
                 <span class="icon">${item.icon}</span>
-                <span class="nav-text" style="transition: opacity 0.2s;">${item.text}</span>
+                <span class="nav-text">${item.text}</span>
             </a>
         `;
     });
@@ -179,6 +180,45 @@ function renderSidebar() {
     `;
 
     sidebar.innerHTML = html;
+}
+
+function renderMobileNav() {
+    // Only proceed if we are in an app page
+    if (!document.querySelector('body.app-page')) return;
+    
+    // Remove existing if any (to prevent duplicates)
+    document.querySelector('.mobile-nav')?.remove();
+
+    const path = window.location.pathname;
+    
+    // Re-use menuItems logic
+    const menuItems = [
+        { href: '/dashboard', icon: '🏠', text: 'Acasă' },
+        { href: '/budget', icon: '💰', text: 'Buget' },
+        { href: '/schedule', icon: '📅', text: 'Timp' },
+        { href: '/tasks', icon: '📋', text: 'Proiecte' },
+        { href: '/habits', icon: '📈', text: 'Obiceiuri' },
+        { href: '/notes', icon: '📝', text: 'Note' },
+        { href: '/weather', icon: '🌤️', text: 'Vreme' },
+        { href: '/savings', icon: '💎', text: 'Economii' },
+        { href: '/analytics', icon: '📊', text: 'Statistici' },
+        { href: '/settings', icon: '⚙️', text: 'Setări' }
+    ];
+
+    const nav = document.createElement('nav');
+    nav.className = 'mobile-nav';
+    
+    menuItems.forEach(item => {
+        const isActive = path === item.href ? 'active' : '';
+        nav.innerHTML += `
+            <a href="${item.href}" class="mobile-nav-item ${isActive}">
+                <span class="icon">${item.icon}</span>
+                <span>${item.text}</span>
+            </a>
+        `;
+    });
+
+    document.body.appendChild(nav);
 }
 
 function toggleSidebar() {
