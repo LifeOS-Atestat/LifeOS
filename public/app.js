@@ -62,6 +62,7 @@ const API = {
     habits: '/api/habits',
     notes: '/api/notes',
     savings: '/api/savings',
+    links: '/api/links',
     analytics: '/api/analytics'
 };
 
@@ -101,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Page Specific Logic
     if (document.getElementById('loginForm')) initLogin();
     if (document.getElementById('registerForm')) initRegister();
-    if (document.getElementById('timelineList')) { initDashboard(); initTasksWidget(); } // Home
+    if (document.getElementById('timelineList')) { initDashboard(); initTasksWidget(); initLinksWidget(); } // Home
     if (document.getElementById('remainingBudget')) initBudget(); // Budget Page
     if (document.getElementById('actModal')) initSchedule(); // Schedule Page
     if (document.getElementById('habitsList')) initHabits(); // Habits Page
@@ -112,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('savingsSummary')) initSavingsWidget(); // Dashboard Widget
     if (document.getElementById('waterTotal')) initHydration(); // Hydration Widget
     if (document.getElementById('categoryChart')) initAnalytics(); // Analytics Page
+    if (document.getElementById('linksList')) initLinks(); // Links Page
 });
 
 function renderSidebar() {
@@ -130,6 +132,7 @@ function renderSidebar() {
         { href: '/notes', icon: '📝', text: 'Note' },
         { href: '/weather', icon: '🌤️', text: 'Vreme' },
         { href: '/savings', icon: '💎', text: 'Economii' },
+        { href: '/links', icon: '🔗', text: 'Linkuri' },
         { href: '/analytics', icon: '📊', text: 'Statistici' },
         { href: '/settings', icon: '⚙️', text: 'Setări' }
     ];
@@ -201,6 +204,7 @@ function renderMobileNav() {
         { href: '/notes', icon: '📝', text: 'Note' },
         { href: '/weather', icon: '🌤️', text: 'Vreme' },
         { href: '/savings', icon: '💎', text: 'Economii' },
+        { href: '/links', icon: '🔗', text: 'Linkuri' },
         { href: '/analytics', icon: '📊', text: 'Statistici' },
         { href: '/settings', icon: '⚙️', text: 'Setări' }
     ];
@@ -2003,4 +2007,188 @@ function adjustColor(hex, amt) {
     let g = (num & 0x0000FF) + amt;
     if (g > 255) g = 255; else if (g < 0) g = 0;
     return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16).padStart(6, '0');
+}
+
+/* --- USEFUL LINKS --- */
+function initLinks() {
+    loadLinks();
+}
+
+async function loadLinks() {
+    const list = document.getElementById("linksList");
+    if (!list) return;
+
+    try {
+        const res = await fetch(API.links);
+        const links = await res.json();
+
+        if (links.length === 0) {
+            list.innerHTML = `
+                <div class="empty-state" style="grid-column: 1/-1;">
+                    <span class="empty-icon">🔗</span>
+                    <p>Nu ai salvat niciun link încă.</p>
+                    <button class="btn-mini" style="margin-top: 1rem;" onclick="addDefaultLinks()">Adaugă Link-uri Sugerate</button>
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = "";
+        links.forEach(link => {
+            const card = document.createElement("div");
+            card.className = `link-card ${link.is_pinned ? 'pinned' : ''}`;
+            card.innerHTML = `
+                <div class="link-header">
+                    <div class="link-icon">${link.icon || "🔗"}</div>
+                    <div class="link-info">
+                        <div class="link-title" title="${link.title}">${link.title}</div>
+                        <div class="link-url" title="${link.url}">${link.url.replace(/^https?:\/\//, "")}</div>
+                    </div>
+                </div>
+                <div class="link-category">${link.category}</div>
+                <div class="link-actions">
+                    <button class="btn-link-action pin ${link.is_pinned ? 'active' : ''}" onclick="togglePinLink(${link.id})" title="${link.is_pinned ? 'Anulează fixarea' : 'Fixează sus'}">
+                        ${link.is_pinned ? "📌" : "📍"}
+                    </button>
+                    <button class="btn-link-action delete" onclick="deleteLink(${link.id})" title="Șterge link">
+                        🗑️
+                    </button>
+                </div>
+                <a href="${link.url}" target="_blank" class="btn-visit">
+                    Vizitează <span>↗️</span>
+                </a>
+            `;
+            list.appendChild(card);
+        });
+    } catch (err) {
+        console.error("Eroare la încărcarea linkurilor:", err);
+        list.innerHTML = "<p style='color: var(--danger);'>Eroare la încărcarea linkurilor.</p>";
+    }
+}
+
+async function saveLink() {
+    const title = document.getElementById("linkTitle").value;
+    const url = document.getElementById("linkUrl").value;
+    const category = document.getElementById("linkCategory").value;
+    const icon = document.getElementById("linkIcon").value;
+
+    if (!title || !url) return showToast("Titlul și URL-ul sunt obligatorii!", "warning");
+
+    try {
+        const res = await fetch(API.links, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, url, category, icon })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            showToast("Link salvat!", "success");
+            closeModal("linkModal");
+            loadLinks();
+            // Reset fields
+            document.getElementById("linkTitle").value = "";
+            document.getElementById("linkUrl").value = "";
+            document.getElementById("linkIcon").value = "🔗";
+        } else {
+            showToast("Eroare: " + result.error, "error");
+        }
+    } catch (err) {
+        console.error(err);
+        showToast("Eroare de rețea.", "error");
+    }
+}
+
+async function togglePinLink(id) {
+    try {
+        const res = await fetch(`${API.links}/${id}/pin`, { method: "PATCH" });
+        const result = await res.json();
+        if (result.success) {
+            showToast(result.is_pinned ? "Link fixat sus!" : "Link-ul a fost de-fixat.", "info");
+            loadLinks();
+        } else {
+            showToast("Eroare la actualizarea link-ului.", "error");
+        }
+    } catch (err) {
+        console.error(err);
+        showToast("Eroare de rețea.", "error");
+    }
+}
+
+async function deleteLink(id) {
+    showConfirm("Șterge Link", "Sigur vrei să ștergi acest link?", async () => {
+        try {
+            const res = await fetch(`${API.links}/${id}`, { method: "DELETE" });
+            const result = await res.json();
+            if (result.success) {
+                showToast("Link șters cu succes.", "info");
+                loadLinks();
+            } else {
+                showToast("Eroare la ștergerea link-ului.", "error");
+            }
+        } catch (err) {
+            console.error(err);
+            showToast("Eroare de rețea.", "error");
+        }
+    });
+}
+
+async function addDefaultLinks() {
+    const defaults = [
+        { title: "ChatGPT", url: "https://chat.openai.com", category: "Utilități", icon: "🤖" },
+        { title: "Google Calendar", url: "https://calendar.google.com", category: "Muncă", icon: "📅" },
+        { title: "Canva", url: "https://www.canva.com", category: "Divertisment", icon: "🎨" },
+        { title: "MDN Web Docs", url: "https://developer.mozilla.org", category: "Educație", icon: "📚" }
+    ];
+
+    for (const link of defaults) {
+        await fetch(API.links, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(link)
+        });
+    }
+    loadLinks();
+    showToast("Link-uri sugerate adăugate!", "success");
+}
+
+async function initLinksWidget() {
+    const container = document.getElementById("linksDashboard");
+    if (!container) return;
+
+    try {
+        const res = await fetch(API.links);
+        const links = await res.json();
+
+        if (links.length === 0) {
+            container.innerHTML = '<div style="padding: 1rem; text-align: center; color: #94a3b8; font-style: italic; font-size: 0.85rem;">Niciun link salvat.</div>';
+            return;
+        }
+
+        // Show only pinned or first 4
+        const displayLinks = links.filter(l => l.is_pinned).concat(links.filter(l => !l.is_pinned)).slice(0, 4);
+
+        container.innerHTML = "";
+        displayLinks.forEach(link => {
+            const a = document.createElement("a");
+            a.href = link.url;
+            a.target = "_blank";
+            a.className = "dashboard-link-item";
+            a.style.cssText = "display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: white; padding: 0.5rem; border-radius: 8px; transition: 0.2s; background: rgba(255,255,255,0.02);";
+            a.onmouseover = () => a.style.background = "rgba(255,255,255,0.05)";
+            a.onmouseout = () => a.style.background = "rgba(255,255,255,0.02)";
+
+            a.innerHTML = `
+                <span style="font-size: 1.2rem;">${link.icon || "🔗"}</span>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 500; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${link.title}</div>
+                    <div style="font-size: 0.75rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${link.url.replace(/^https?:\/\//, "")}</div>
+                </div>
+                ${link.is_pinned ? '<span style="font-size: 0.7rem;">📌</span>' : ""}
+            `;
+            container.appendChild(a);
+        });
+    } catch (err) {
+        console.error(err);
+    }
 }

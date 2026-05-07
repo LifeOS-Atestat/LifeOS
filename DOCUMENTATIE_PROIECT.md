@@ -57,6 +57,13 @@ Pagina principală oferă o privire de ansamblu rapidă:
 *   **Finalizarea Activităților**: Buton "Terminat (✓)" care marchează vizual sarcina și o păstrează în istoric timp de o oră înainte de eliminarea automată.
 *   **Indicatori de Timp**: Afișarea timpului rămăs până la următoarea activitate (ex: "În 1h 20min") și a numărului de zile până la evenimentele viitoare.
 
+### 🔗 Modul Linkuri Utile (Hub de Resurse)
+*   **Gestiune Resurse**: Salvarea și organizarea link-urilor frecvent utilizate.
+*   **Fixare (Pin)**: Posibilitatea de a fixa link-urile importante în partea de sus a listei.
+*   **Categorizare**: Organizarea pe domenii (Muncă, Educație, Divertisment etc.).
+*   **Widget Dashboard**: Acces rapid la cele mai importante link-uri direct de pe pagina principală.
+*   **Sugestii**: Sistem de adăugare rapidă a unor link-uri utile predefinite (ChatGPT, Google Calendar etc.).
+
 ### ⚙️ Setări și Personalizare (Power User)
 *   **Tema Duală**: Comutare între **Light Mode** și **Dark Mode** cu persistență (salvare preferință în browser).
 *   **Accent Color Picker**: Posibilitatea de a alege o nuanță principală pentru interfață, afectând butoanele, bordurile și gradienții de fundal.

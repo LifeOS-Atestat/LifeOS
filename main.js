@@ -106,6 +106,24 @@ function registerUser(username, email, password, isAdmin, res) {
             }
             return res.status(500).json({ error: "Eroare la crearea contului." });
         }
+
+        // --- Adăugare Link-uri Implicite ---
+        try {
+            const defaults = [
+                { title: 'ChatGPT', url: 'https://chat.openai.com', category: 'Utilități', icon: '🤖' },
+                { title: 'Google Calendar', url: 'https://calendar.google.com', category: 'Muncă', icon: '📅' },
+                { title: 'Canva', url: 'https://www.canva.com', category: 'Divertisment', icon: '🎨' },
+                { title: 'MDN Web Docs', url: 'https://developer.mozilla.org', category: 'Educație', icon: '📚' }
+            ];
+            const stmt = db.prepare(`INSERT INTO links (user_id, title, url, category, icon) VALUES (?, ?, ?, ?, ?)`);
+            defaults.forEach(link => {
+                stmt.run(userId, link.title, link.url, link.category, link.icon);
+            });
+            console.log(`Link-uri implicite adăugate pentru utilizatorul ${userId}`);
+        } catch (linkErr) {
+            console.error("Eroare la adăugarea link-urilor implicite:", linkErr);
+        }
+
         res.json({ success: true, message: "Cont creat cu succes!" });
     });
 }
@@ -809,6 +827,59 @@ app.delete('/api/tasks/:id', requireLogin, (req, res) => {
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: "Eroare ștergere task" });
+    }
+});
+
+// ==========================================
+// Useful Links API
+// ==========================================
+
+app.get('/api/links', requireLogin, (req, res) => {
+    const userId = req.session.userId;
+    try {
+        const rows = db.prepare(`SELECT * FROM links WHERE user_id = ? ORDER BY is_pinned DESC, created_at DESC`).all(userId);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: "Eroare DB" });
+    }
+});
+
+app.post('/api/links', requireLogin, (req, res) => {
+    const { title, url, category, icon } = req.body;
+    const userId = req.session.userId;
+    if (!title || !url) return res.status(400).json({ error: "Titlul și URL-ul sunt obligatorii." });
+
+    try {
+        db.prepare(`INSERT INTO links (user_id, title, url, category, icon) VALUES (?, ?, ?, ?, ?)`).run(userId, title, url, category || 'General', icon || '🔗');
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare salvare link" });
+    }
+});
+
+app.patch('/api/links/:id/pin', requireLogin, (req, res) => {
+    const id = req.params.id;
+    const userId = req.session.userId;
+    try {
+        const link = db.prepare(`SELECT is_pinned FROM links WHERE id = ? AND user_id = ?`).get(id, userId);
+        if (!link) return res.status(404).json({ error: "Link negăsit" });
+
+        const newPinned = link.is_pinned ? 0 : 1;
+        db.prepare(`UPDATE links SET is_pinned = ? WHERE id = ? AND user_id = ?`).run(newPinned, id, userId);
+        res.json({ success: true, is_pinned: !!newPinned });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare actualizare pin" });
+    }
+});
+
+app.delete('/api/links/:id', requireLogin, (req, res) => {
+    const id = req.params.id;
+    const userId = req.session.userId;
+    try {
+        db.prepare(`DELETE FROM links WHERE id = ? AND user_id = ?`).run(id, userId);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Eroare ștergere link" });
     }
 });
 

@@ -171,7 +171,47 @@ function initializeDatabase() {
     console.log("Migrare: Am adăugat coloana 'category' în tabela 'expenses'.");
   }
 
-  console.log('Tabelele are ready: users, habits, notes, savings_goals, hydration, budget_categories, tasks, etc.');
+  // 15. Tabel Linkuri Utile
+  db.prepare(`CREATE TABLE IF NOT EXISTS links (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      url TEXT NOT NULL,
+      category TEXT DEFAULT 'General',
+      icon TEXT,
+      is_pinned INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )`).run();
+
+  // Migration: Add default links for existing users who have 0 links
+  try {
+    const usersWithNoLinks = db.prepare(`
+        SELECT id FROM users 
+        WHERE id NOT IN (SELECT DISTINCT user_id FROM links)
+    `).all();
+
+    if (usersWithNoLinks.length > 0) {
+      console.log(`Migrare: Adăugăm link-uri implicite pentru ${usersWithNoLinks.length} utilizatori existenți.`);
+      const defaults = [
+        { title: 'ChatGPT', url: 'https://chat.openai.com', category: 'Utilități', icon: '🤖' },
+        { title: 'Google Calendar', url: 'https://calendar.google.com', category: 'Muncă', icon: '📅' },
+        { title: 'Canva', url: 'https://www.canva.com', category: 'Divertisment', icon: '🎨' },
+        { title: 'MDN Web Docs', url: 'https://developer.mozilla.org', category: 'Educație', icon: '📚' }
+      ];
+
+      const insertStmt = db.prepare(`INSERT INTO links (user_id, title, url, category, icon) VALUES (?, ?, ?, ?, ?)`);
+      usersWithNoLinks.forEach(user => {
+        defaults.forEach(link => {
+          insertStmt.run(user.id, link.title, link.url, link.category, link.icon);
+        });
+      });
+    }
+  } catch (err) {
+    console.error("Eroare la migrarea link-urilor implicite:", err);
+  }
+
+  console.log('Tabelele are ready: users, habits, notes, savings_goals, hydration, budget_categories, tasks, links, etc.');
 }
 
 /**
